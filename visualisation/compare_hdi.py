@@ -1,5 +1,5 @@
 """
-compare hdi from pystan fit traces
+compare hdi from pystan fit traces (depreciated version)
 """
 import os, sys
 import pickle

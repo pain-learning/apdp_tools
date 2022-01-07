@@ -57,17 +57,23 @@ done
 
 Please note Stan can take several hours to run for a large number of subjects/trials on a cluster. And evaluation requires at least simulation from at least 30 different random seeds (per task).
 
-## Evaluation
+## Visualisation
 
 For power calculation, to evaluate effect size and fitted parameter distribution, run:
 
 ```eval
-python compare_hdi.py bandit
+python hdi_compare.py
 ```
 
-* model name bandit (or use generalise/motoradapt for other tasks)
+It's possible to modify task models and parameters inside `hdi_compare.py`. It's recommended to run at least 10 simulations (`draw_idx=10`) and permuate 100 times (`n_perm=100`) to ensure a good estimation of HDI stats.
   
 Output plots and statistics are in `./figs`.
+
+## Using your own data
+
+It's also possible to collect your own data and use that for analysis using this toolbox. Simply clone the tasks on Pavlovia and run it with your subject pool, download the data locally, run data transformation and then fit data to models.
+
+(TODO: add pipeline to transform pavlovia data to compatible data dicts for fitting and visualisation)
 
 ## License
 
