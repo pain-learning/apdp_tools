@@ -1,13 +1,10 @@
 """
-simulated power calculation for generalisation instrumetnal avoidance task (with gen in model)
+data simulation and fitting for generalisation instrumetnal avoidance task (with gen in model)
 """
 import sys, os
-import pickle
 import numpy as np
 import pandas as pd
-import pystan
-# from hbayesdm.models import generalise_gs
-# from hbayesdm import rhat, print_fit, plot_hdi, hdi
+import stan
 
 def sigmoid(p):
     return 1./(1.+np.exp(-p))
@@ -115,8 +112,7 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
     # print(df_out)
     return df_out
 
-def sim_generalise_gs(param_dict, sd_dict, group_name, seed, 
-                         num_sj=50, num_trial=190, model_name='generalise_gs'):
+def sim_generalise_gs(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=190, model_name='generalise_gs'):
     """simulate generalise instrumental avoidance task for multiple subjects"""
     multi_subject = []
     
@@ -165,9 +161,9 @@ def generalise_gs_preprocess_func(txt_path):
 
     # Wrap into a dict for pystan
     data_dict = {
-        'N': n_subj,
-        'T': t_max,
-        'Tsubj': t_subjs,
+        'N': int(n_subj),
+        'T': int(t_max),
+        'Tsubj': t_subjs.astype(int),
         'cue': cue,
         'choice': choice,
         'outcome': outcome,
@@ -236,18 +232,36 @@ if __name__ == "__main__":
     data_dict = generalise_gs_preprocess_func(txt_path)
 
     # fit stan model
-    sm = pystan.StanModel(file='generalise_gs.stan')
-    fit = sm.sampling(data=data_dict, iter=3000, chains=2)
-    print(fit)
+    model_code = open('./models/generalise_gs.stan', 'r').read()
+    posterior = stan.build(program_code=model_code, data=data_dict)
+    fit = posterior.sample(num_samples=2000, num_chains=4)
+    df = fit.to_frame()  # pandas `DataFrame, requires pandas
+    print(df['mu_sigma_a'].agg(['mean','var']))
+    print(df['mu_beta'].agg(['mean','var']))
 
-    # saving
+    # saving traces
     pars = ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias']
-    extracted = fit.extract(pars=pars, permuted=True)
-    # print(extracted)
-    sfile = f'./tmp_output/generalise_sim/{group_name}_sim_{seed_num}.pkl'
-    with open(sfile, 'wb') as op:
-        tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
-        pickle.dump(tmp, op)
+    df_extracted = df[pars]
+    save_dir = './tmp_output/generalise_trace/'
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+    sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
+    df_extracted.to_csv(sfile, index=None)
+
+
+    # # fit stan model
+    # sm = pystan.StanModel(file='generalise_gs.stan')
+    # fit = sm.sampling(data=data_dict, iter=3000, chains=2)
+    # print(fit)
+
+    # # saving
+    # pars = ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias']
+    # extracted = fit.extract(pars=pars, permuted=True)
+    # # print(extracted)
+    # sfile = f'./tmp_output/generalise_sim/{group_name}_sim_{seed_num}.pkl'
+    # with open(sfile, 'wb') as op:
+    #     tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
+    #     pickle.dump(tmp, op)
 
     # hbayesdm method
     # # fit

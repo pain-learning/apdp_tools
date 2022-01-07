@@ -1,13 +1,10 @@
 """
-simulated power calculation for motor adaptation task (state space model)
+data simulation and fitting for motor adaptation / PomLab task (state space model)
 """
 import sys, os
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pystan
-import pickle
+import stan
 
 def sim_motoradapt_single(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=200, model_name='motoradapt_single', plot=False, plot_raw=False):
     """simulate with state space model for multiple subjects"""
@@ -93,9 +90,9 @@ def motoradapt_preprocess_func(txt_path):
 
     # Wrap into a dict for pystan
     data_dict = {
-        'N': n_subj,
-        'T': t_max,
-        'Tsubj': t_subjs,
+        'N': int(n_subj),
+        'T': int(t_max),
+        'Tsubj': t_subjs.astype(int),
         'rotation': rotation,
         'state': state,
     }
@@ -172,15 +169,32 @@ if __name__ == "__main__":
     data_dict = motoradapt_preprocess_func(txt_path)
 
     # fit stan model
-    sm = pystan.StanModel(file='motoradapt_single.stan')
-    fit = sm.sampling(data=data_dict, iter=2000, chains=4)
-    print(fit)
+    model_code = open('./models/motoradapt_single.stan', 'r').read()
+    posterior = stan.build(program_code=model_code, data=data_dict)
+    fit = posterior.sample(num_samples=2000, num_chains=4)
+    df = fit.to_frame()  # pandas `DataFrame, requires pandas
+    print(df['mu_A'].agg(['mean','var']))
+    print(df['mu_B'].agg(['mean','var']))
 
-    # saving
+    # saving traces
     pars = ['mu_A', 'mu_B', 'mu_sig']
-    extracted = fit.extract(pars=pars, permuted=True)
-    # print(extracted)
-    sfile = f'./tmp_output/motoradapt_sim/{group_name}_sim_{seed_num}.pkl'
-    with open(sfile, 'wb') as op:
-        tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
-        pickle.dump(tmp, op)
+    df_extracted = df[pars]
+    save_dir = './tmp_output/motoradapt_trace/'
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+    sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
+    df_extracted.to_csv(sfile, index=None)
+
+    # # fit stan model
+    # sm = pystan.StanModel(file='motoradapt_single.stan')
+    # fit = sm.sampling(data=data_dict, iter=2000, chains=4)
+    # print(fit)
+
+    # # saving
+    # pars = ['mu_A', 'mu_B', 'mu_sig']
+    # extracted = fit.extract(pars=pars, permuted=True)
+    # # print(extracted)
+    # sfile = f'./tmp_output/motoradapt_sim/{group_name}_sim_{seed_num}.pkl'
+    # with open(sfile, 'wb') as op:
+    #     tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
+    #     pickle.dump(tmp, op)

@@ -1,0 +1,36 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+@EXPLICIT
+https://repo.anaconda.com/pkgs/main/linux-64/_libgcc_mutex-0.1-main.conda
+https://conda.anaconda.org/conda-forge/linux-64/ca-certificates-2021.10.8-ha878542_0.tar.bz2
+https://conda.anaconda.org/conda-forge/noarch/kernel-headers_linux-64-2.6.32-he073ed8_15.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/ld_impl_linux-64-2.35.1-h7274673_9.conda
+https://repo.anaconda.com/pkgs/main/linux-64/libgcc-devel_linux-64-9.3.0-hb95220a_17.conda
+https://repo.anaconda.com/pkgs/main/linux-64/libstdcxx-devel_linux-64-9.3.0-hf0c5c8d_17.conda
+https://repo.anaconda.com/pkgs/main/linux-64/libstdcxx-ng-9.3.0-hd4cf53a_17.conda
+https://repo.anaconda.com/pkgs/main/noarch/tzdata-2021e-hda174b7_0.conda
+https://repo.anaconda.com/pkgs/main/linux-64/libgomp-9.3.0-h5101ec6_17.conda
+https://conda.anaconda.org/conda-forge/noarch/sysroot_linux-64-2.12-he073ed8_15.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/_openmp_mutex-4.5-1_gnu.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/binutils_impl_linux-64-2.35.1-h27ae35d_9.conda
+https://repo.anaconda.com/pkgs/main/linux-64/binutils_linux-64-2.35.1-h454624a_30.conda
+https://repo.anaconda.com/pkgs/main/linux-64/libgcc-ng-9.3.0-h5101ec6_17.conda
+https://repo.anaconda.com/pkgs/main/linux-64/gcc_impl_linux-64-9.3.0-h6df7d76_17.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/libffi-3.3-he6710b0_2.conda
+https://repo.anaconda.com/pkgs/main/linux-64/ncurses-6.3-h7f8727e_2.conda
+https://repo.anaconda.com/pkgs/main/linux-64/openssl-1.1.1l-h7f8727e_0.conda
+https://repo.anaconda.com/pkgs/main/linux-64/xz-5.2.5-h7b6447c_0.conda
+https://repo.anaconda.com/pkgs/main/linux-64/zlib-1.2.11-h7f8727e_4.conda
+https://repo.anaconda.com/pkgs/main/linux-64/gcc_linux-64-9.3.0-h1ee779e_30.conda
+https://repo.anaconda.com/pkgs/main/linux-64/gxx_impl_linux-64-9.3.0-hbdd7822_17.conda
+https://repo.anaconda.com/pkgs/main/linux-64/readline-8.1-h27cfd23_0.conda
+https://repo.anaconda.com/pkgs/main/linux-64/tk-8.6.11-h1ccaba5_0.conda
+https://repo.anaconda.com/pkgs/main/linux-64/gxx_linux-64-9.3.0-h7e70986_30.conda
+https://repo.anaconda.com/pkgs/main/linux-64/sqlite-3.37.0-hc218d9a_0.conda
+https://repo.anaconda.com/pkgs/main/linux-64/python-3.9.7-h12debd9_1.conda
+https://conda.anaconda.org/conda-forge/linux-64/python_abi-3.9-2_cp39.tar.bz2
+https://repo.anaconda.com/pkgs/main/noarch/wheel-0.37.0-pyhd3eb1b0_1.conda
+https://conda.anaconda.org/conda-forge/linux-64/certifi-2021.10.8-py39hf3d152e_1.tar.bz2
+https://repo.anaconda.com/pkgs/main/linux-64/setuptools-58.0.4-py39h06a4308_0.conda
+https://repo.anaconda.com/pkgs/main/linux-64/pip-21.2.4-py39h06a4308_0.conda

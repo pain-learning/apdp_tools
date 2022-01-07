@@ -1,11 +1,10 @@
 """
-simulated power calculation for bandit 4-arm task (with lapse in model, combined used in fapia)
+data simulation and fitting for 4-arm bandit task (combined model with lapse as used in fapia)
 """
 import os, sys
-import pickle
 import numpy as np
 import pandas as pd
-import pystan
+import stan
 
 def sim_bandit4arm_combined(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=200, model_name='bandit4arm_combined'):
     """simulate 4 arm bandit data for multiple subjects"""
@@ -120,9 +119,9 @@ def bandit_combined_preprocess_func(txt_path):
 
     # Wrap into a dict for pystan
     data_dict = {
-        'N': n_subj,
-        'T': t_max,
-        'Tsubj': t_subjs,
+        'N': int(n_subj),
+        'T': int(t_max),
+        'Tsubj': t_subjs.astype(int),
         'rew': rew,
         'los': los,
         'choice': choice,
@@ -193,17 +192,34 @@ if __name__ == "__main__":
     data_dict = bandit_combined_preprocess_func(txt_path)
 
     # fit stan model
-    sm = pystan.StanModel(file='bandit4arm_combLR_lapse_decay_b.stan')
-    fit = sm.sampling(data=data_dict, iter=2000, chains=1)
-    print(fit)
+    model_code = open('./models/bandit4arm_combLR_lapse_decay_b.stan', 'r').read()
+    posterior = stan.build(program_code=model_code, data=data_dict)
+    fit = posterior.sample(num_samples=2000, num_chains=4)
+    df = fit.to_frame()  # pandas `DataFrame, requires pandas
+    print(df['mu_Arew'].agg(['mean','var']))
+    print(df['mu_Apun'].agg(['mean','var']))
 
-    # saving
+    # saving traces
     pars = ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi','mu_d']
-    extracted = fit.extract(pars=pars, permuted=True)
-    # print(extracted)
-    sfile = f'./tmp_output/bandit_combined_sim/{group_name}_sim_{seed_num}.pkl'
-    with open(sfile, 'wb') as op:
-        tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
-        pickle.dump(tmp, op)
+    df_extracted = df[pars]
+    save_dir = './tmp_output/bandit_combined_trace/'
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+    sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
+    df_extracted.to_csv(sfile, index=None)
+
+    # # fit stan model (pystan2 version)
+    # sm = pystan.StanModel(file='bandit4arm_combLR_lapse_decay_b.stan')
+    # fit = sm.sampling(data=data_dict, iter=2000, chains=1)
+    # print(fit)
+
+    # # saving
+    # pars = ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi','mu_d']
+    # extracted = fit.extract(pars=pars, permuted=True)
+    # # print(extracted)
+    # sfile = f'./tmp_output/bandit_combined_sim/{group_name}_sim_{seed_num}.pkl'
+    # with open(sfile, 'wb') as op:
+    #     tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
+    #     pickle.dump(tmp, op)
 
 

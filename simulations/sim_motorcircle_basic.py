@@ -1,10 +1,9 @@
 """
-simulated power calculation for motor circle task (probablistic model)
+data simulation and fitting for motor circle task (probablistic model)
 """
 import sys, os
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import stan
 
 def sim_motorcircle(task_params, param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=200, model_name='motorcircle_basic'):
@@ -96,7 +95,7 @@ def motorcircle_preprocess_func(txt_path, task_params):
 
 
 if __name__ == "__main__":
-    n = 100
+    # simulation parameters
     task_near = {
         'x_target': 0, # target circle x
         'y_target': 0, # target circle y
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     txt_path = f'./tmp_output/motorcircle_sim/motorcircle_near_{group_name}_{seed_num}.txt'
     data_dict = motorcircle_preprocess_func(txt_path, task_params=task_near)
     # print(data_dict)
-    model_code = open('./motorcircle_basic.stan', 'r').read()
+    model_code = open('./models/motorcircle_basic.stan', 'r').read()
 
     # fit stan model
     posterior = stan.build(program_code=model_code, data=data_dict)
@@ -152,9 +151,11 @@ if __name__ == "__main__":
     print(df['loss_sens'].agg(['mean','var']))
     print(df['perturb'].agg(['mean','var']))
 
-    # saving
+    # saving traces
     pars = ['loss_sens', 'perturb']
     df_extracted = df[pars]
-    # print(extracted)
-    sfile = f'./tmp_output/motorcircle_trace/{group_name}_sim_{seed_num}.csv'
+    save_dir = './tmp_output/motorcircle_trace/'
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+    sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
     df_extracted.to_csv(sfile, index=None)

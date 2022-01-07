@@ -1,11 +1,12 @@
 """
-simulated power calculation for bandit 4-arm task (with lapse in model)
+data simulation and fitting for bandit 4-arm task (with lapse in model)
 """
 import os, sys
-import pickle
 import numpy as np
 import pandas as pd
-from hbayesdm.models import bandit4arm_lapse
+import stan
+
+from sim_bandit4arm_combined import bandit_combined_preprocess_func
 
 def sim_bandit4arm_lapse(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=200, model_name='bandit4arm_lapse'):
     """simulate 4 arm bandit data for multiple subjects"""
@@ -23,7 +24,7 @@ def sim_bandit4arm_lapse(param_dict, sd_dict, group_name, seed, num_sj=50, num_t
         
     df_out = pd.concat(multi_subject)
     # saving output
-    output_dir = './tmp_output/bandit_sim/'
+    output_dir = './tmp_output/bandit_lapse_sim/'
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
     f_name = model_name+'_'+group_name+'_'+str(seed)
@@ -54,9 +55,6 @@ def model_bandit4arm_lapse(param_dict, subjID, num_trial=200):
         # compute tmpRew and tmpPun
         tmpRew = int(np.random.binomial(size=1, n=1, p=rew_prob[t, tmpDeck]))
         tmpPun = -1 * int(np.random.binomial(size=1, n=1, p=pun_prob[t, tmpDeck])) # punishment=-1
-
-        # tmpRew = np.random.choice([0,1], size=1, replace=True, p=[1-rew_prob[t,tmpDeck], rew_prob[t, tmpDeck]])
-        # tmpPun = np.random.choice([0,-1], size=1, replace=True, p=[1-pun_prob[t,tmpDeck], pun_prob[t, tmpDeck]])
 
         # compute PE and update values
         PEr = param_dict['R']*tmpRew - Qr[tmpDeck]
@@ -145,17 +143,39 @@ if __name__ == "__main__":
     else:
         print('check group name (hc or pt)')
 
-    # fit
-    # Run the model and store results in "output"
-    output = bandit4arm_lapse('./tmp_output/bandit_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
-    
-    # debug
-    print(output.fit)
+    # parse simulated data
+    txt_path = f'./tmp_output/bandit_lapse_sim/bandit4arm_lapse_{group_name}_{seed_num}.txt'
+    data_dict = bandit_combined_preprocess_func(txt_path)
 
-    # saving
-    sfile = './tmp_output/bandit_sim/'+group_name+'_sim_'+str(seed_num)+'.pkl'
-    with open(sfile, 'wb') as op:
-        tmp = { k: v for k, v in output.par_vals.items() if k in ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi'] } # dict comprehension
-        pickle.dump(tmp, op)
+    # fit stan model
+    model_code = open('./models/bandit4arm_lapse.stan', 'r').read()
+    posterior = stan.build(program_code=model_code, data=data_dict)
+    fit = posterior.sample(num_samples=2000, num_chains=4)
+    df = fit.to_frame()  # pandas `DataFrame, requires pandas
+    print(df['mu_Arew'].agg(['mean','var']))
+    print(df['mu_Apun'].agg(['mean','var']))
+
+    # saving traces
+    pars = ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi']
+    df_extracted = df[pars]
+    save_dir = './tmp_output/bandit_lapse_trace/'
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+    sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
+    df_extracted.to_csv(sfile, index=None)
+
+
+    # # fit
+    # # Run the model and store results in "output"
+    # output = bandit4arm_lapse('./tmp_output/bandit_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
+    
+    # # debug
+    # print(output.fit)
+
+    # # saving
+    # sfile = './tmp_output/bandit_sim/'+group_name+'_sim_'+str(seed_num)+'.pkl'
+    # with open(sfile, 'wb') as op:
+    #     tmp = { k: v for k, v in output.par_vals.items() if k in ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi'] } # dict comprehension
+    #     pickle.dump(tmp, op)
 
 
