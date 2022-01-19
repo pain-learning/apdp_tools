@@ -16,7 +16,7 @@ Activate conda environment before running the code:
 conda activate apdp_tools
 ```
 
-If pystan3 throws a compiler error, install the latest GCC and G++ compilers from conda within the activated conda environment using the following (tested on Linux):
+If pystan3 throws a compiler error, install the latest GCC and G++ compilers from conda within the activated conda environment using the following (tested on Linux CentOS 7):
 
 ```setup
 conda install -c conda-forge gcc_linux-64
@@ -71,9 +71,18 @@ Output plots and statistics are in `./figs`.
 
 ## Using your own data
 
-It's also possible to collect your own data and use that for analysis using this toolbox. Simply clone the tasks on Pavlovia and run it with your subject pool, download the data locally, run data transformation and then fit data to models.
+It's also possible to collect your own data and use that for analysis using this toolbox. Simply follow these steps:
 
-(TODO: add pipeline to transform pavlovia data to compatible data dicts for fitting and visualisation)
+* Fork the study repository on [Pavlovia](https://pavlovia.org) to your account
+* Run the online study with your subject pool (requires Pavlovia license, see their website for details)
+* Clone the forked repository locally in the same directory as `apdp_tools` 
+* Run code in `data_transform` to convert Pavlovia data into model-compatible structure. For example, for the generalisation task, the stan compatible txt file can be found in `transformed_data`
+
+```eval
+python python data_transform/generalise_data.py ../generalisation_py
+```
+
+* Fit your data to models following the same steps in `Simulation` above
 
 ## License
 
