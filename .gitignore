@@ -1,7 +1,5 @@
 build/
 tmp_output/
-gen_output/
-split_files/
 cached*
 python.*
 .vscode/
@@ -9,5 +7,3 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 .DS_Store
-params1.csv
-presentation/
