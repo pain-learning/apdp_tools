@@ -4,7 +4,7 @@ This repository is the code used for data simulation and analysis for pain (ADPD
 
 ## Requirements
 
-Please clone this repo to your machine. Create a new conda environment `apdp_tools` with the given requirements:
+Please clone this repo to your machine. Create a new conda environment `apdp_tools` with the given requirements (nobuild and explicit also available):
 
 ```setup
 conda env create -f environment.yml
@@ -79,10 +79,12 @@ It's also possible to collect your own data and use that for analysis using this
 * Run code in `data_transform` to convert Pavlovia data into model-compatible structure. For example, for the generalisation task, the stan compatible txt file can be found in `transformed_data`
 
 ```eval
-python python data_transform/generalise_data.py ../generalisation_py
+python data_transform/convert_data.py generalise ../generalisation_py
 ```
 
-* Fit your data to models following the same steps in `Simulation` above
+Currently, available task names include `generalise`, `bandit4arm`, `circlemotor`, which is specified in argument 1 above. The 2nd argument is the relative path of your Pavlovia task directory (forked from our source, cloned to your local machine). Alternatively, you can write your own data conversion function to match any changes you've made to the task. 
+
+* Fit your data to models following the same steps in `Simulation` above, and visualise the results following `Visualisation`
 
 ## License
 
