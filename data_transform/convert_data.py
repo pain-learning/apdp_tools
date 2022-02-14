@@ -55,8 +55,8 @@ def split_filename(f_name):
     """split string of data csv filename"""
     from datetime import datetime
     fn_split = f_name.split('_')
-    hrs = fn_split[4].split('.')[0]
-    ts = fn_split[3] + '_' + hrs
+    hrs = fn_split[-1].split('.')[0]
+    ts = fn_split[-2] + '_' + hrs
     ts_dt = datetime.strptime(ts, "%Y-%m-%d_%Hh%M")
     return ts_dt
 
@@ -81,21 +81,41 @@ def transform_generalise(df, output_dir):
     print('\ngeneralisation task data conversion done.')
 
 def transform_bandit4arm(df, output_dir):
-    """transform df into compatible csv for the bandit task"""
+    """transform df into compatible csv for the bandit4arm task"""
     print(df.columns)
     # extracting useful cols
-    df_sub = df[['subjID', 'trials.thisTrialN','CS', 'touch_resp.time', 'outcome']]
+    df_sub = df[['subjID', 'trials.thisTrialN', 'touch_resp.clicked_name', 'corr']]
     # rename cols
-    df_sub.rename(columns={'trials.thisTrialN': 'trial', 'CS': 'cue', 'touch_resp.time': 'choice'}, inplace=True)
+    df_sub.rename(columns={'trials.thisTrialN': 'trial', 'touch_resp.clicked_name': 'cue'}, inplace=True)
     # drop na
-    df_sub.dropna(subset=['outcome'], inplace=True)
-    # convert touch to choice
-    df_sub.loc[df_sub['choice']>0, 'choice'] = 1
-    df_sub.loc[df_sub['choice']!=1, 'choice'] = 0
+    df_sub.dropna(subset=['cue'], inplace=True)
+    # convert touch to choice, check to make sure it matches generated probs
+    df_sub['cue'] = df_sub['cue'].map({
+        'button_upper_left':    1,
+        'button_upper_right':   2,
+        'button_lower_left':    3,
+        'button_lower_right':   4
+    })
+    # convert wins to gain col
+    df_sub['gain'] = df_sub['corr'].map({
+        0:0,    # nothing
+        1:1,    # win
+        11:1,   # win and loss
+        -1:0    # loss
+    })
+    # convert loss to loss
+    df_sub['loss'] = df_sub['corr'].map({
+        0:0,    # nothing
+        1:0,    # win
+        11:-1,   # win and loss
+        -1:-1    # loss
+    })
+    # removing corr col
+    df_sub = df_sub.drop('corr', axis=1)
     # convert all to int
     df_sub = df_sub.astype(int)
     # saving tsv
-    output_path = os.path.join(output_dir, 'bandit_data.txt')
+    output_path = os.path.join(output_dir, 'bandit4arm_data.txt')
     df_sub.to_csv(output_path, index=None, sep='\t')
     # print status
     print('\nbandit task data conversion done.')
