@@ -124,9 +124,11 @@ def transform_motorcircle(df, output_dir):
     """transform df into compatible csv for circlemotor task"""
     print(df.columns)
     # extracting useful cols
-    df_sub = df[['subjID', 'trials.thisTrialN','touch_resp.x', 'touch_resp.y', 'circle_solid', 'circle_empty', 'circle_both', 'touch_resp.time']]
+    df_sub = df[['subjID', 'trials.thisTrialN','touch_resp.x', 'touch_resp.y', 'solid_y', 'empty_y']]
+    # df_sub = df[['subjID', 'trials.thisTrialN','touch_resp.x', 'touch_resp.y']]
     # rename cols
-    df_sub.rename(columns={'trials.thisTrialN': 'trial', 'touch_resp.x': 'x', 'touch_resp.y': 'y', 'touch_resp.time': 'reaction_time'}, inplace=True)
+    df_sub.rename(columns={'trials.thisTrialN': 'trial', 'touch_resp.x': 'x', 'touch_resp.y': 'y'}, inplace=True)
+    # df_sub.rename(columns={'trials.thisTrialN': 'trial', 'touch_resp.x': 'x', 'touch_resp.y': 'y'}, inplace=True)
     # drop na
     df_sub.dropna(subset=['x'], inplace=True)
     # saving tsv

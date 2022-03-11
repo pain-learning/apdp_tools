@@ -56,7 +56,7 @@ def model_motorcircle(task_params, subject_params, subjID=0, num_trial=200):
     })
     return df_out
 
-def motorcircle_preprocess_func(txt_path, task_params):
+def motorcircle_preprocess_func(txt_path, task_params=None):
     """parse simulated data for pystan"""
     # Iterate through grouped_data
     subj_group = pd.read_csv(txt_path, sep='\t')
@@ -87,8 +87,9 @@ def motorcircle_preprocess_func(txt_path, task_params):
         'y': y.tolist(),
     }
     # add task params
-    data_dict.update(task_params)
-    # print(data_dict['x'])
+    if task_params is not None:
+        data_dict.update(task_params)
+    # print(data_dict)
     # Returned data_dict will directly be passed to pystan
     return data_dict
 
