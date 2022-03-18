@@ -10,6 +10,8 @@ from pandas.errors import EmptyDataError
 def load_pavlovia(task_name, task_dir, output_dir='./transformed_data'):
     """load pavlovia repo of the task and the data within"""
     # check if this has data dir
+    # task_name = 'generalise'
+    # task_dir = '../generalise'
     task_data_dir = os.path.join(task_dir, 'data')
     if not os.path.isdir(task_data_dir):
         raise ValueError('No Pavlovia data directory found.')
@@ -31,21 +33,32 @@ def load_pavlovia(task_name, task_dir, output_dir='./transformed_data'):
         # sort data file according to date
         f_list_sorted = sorted(f_list, key=split_filename)
     # print(f_list_sorted)
+    
     # load to panda df
     df_ls = []
-    id_count = 0
+    df_pid_subjID = []
+    id_count = 1
     for f in f_list_sorted:
         csv_path = os.path.join(task_data_dir, f)
         df = pd.read_csv(csv_path)
         df['subjID'] = id_count
         df_ls.append(df)
+        df_pid_subjID.append(df[['subjID','participant']])
         id_count += 1
     df_out = pd.concat(df_ls)
+    
+    # mapping from PID to subjID
+    df_pid_subjID = pd.concat(df_pid_subjID)
+    df_pid_subjID.drop_duplicates('subjID',inplace=True)
+    df_pid_subjID.fillna('XSUB',inplace=True)
+    pidsub_path = os.path.join(output_dir, task_name+'_PID_subjID.txt')
+    df_pid_subjID.to_csv(pidsub_path, index=None, sep='\t')
+    
     # transform data and save
     if 'generalise' in task_name:
         transform_generalise(df_out, output_dir=output_dir)
-    elif 'bandit4arm' in task_name:
-        transform_bandit4arm(df_out, output_dir=output_dir)
+    elif 'bandit3arm' in task_name:
+        transform_bandit3arm(df_out, output_dir=output_dir)
     elif 'circlemotor' in task_name:
         transform_motorcircle(df_out, output_dir=output_dir)
     else:
@@ -62,61 +75,51 @@ def split_filename(f_name):
 
 def transform_generalise(df, output_dir):
     """transform df into compatible csv for the generalisation task"""
+    # df=df_out
     print(df.columns)
+    
     # extracting useful cols
-    df_sub = df[['subjID', 'trials.thisTrialN','CS', 'touch_resp.time', 'outcome']]
+    df_sub = df[['subjID', 'trials.thisTrialN','cue', 'choice', 'rt', 'outcome']]
+    
     # rename cols
-    df_sub.rename(columns={'trials.thisTrialN': 'trial', 'CS': 'cue', 'touch_resp.time': 'choice'}, inplace=True)
+    df_sub.rename(columns={'trials.thisTrialN': 'trial'}, inplace=True)
+    
     # drop na
-    df_sub.dropna(subset=['outcome'], inplace=True)
-    # convert touch to choice
-    df_sub.loc[df_sub['choice']>0, 'choice'] = 1
-    df_sub.loc[df_sub['choice']!=1, 'choice'] = 0
+    df_sub.dropna(subset=['trial'], inplace=True)
+ 
     # convert all to int
-    df_sub = df_sub.astype(int)
+    df_sub.fillna(999,inplace=True)
+    df_sub[['trial','choice','cue','outcome']] = df_sub[['trial','choice','cue','outcome']].astype(int)
+
     # saving tsv
     output_path = os.path.join(output_dir, 'generalise_data.txt')
     df_sub.to_csv(output_path, index=None, sep='\t')
+    
     # print status
     print('\ngeneralisation task data conversion done.')
 
-def transform_bandit4arm(df, output_dir):
-    """transform df into compatible csv for the bandit4arm task"""
+def transform_bandit3arm(df, output_dir):
+    """transform df into compatible csv for the bandit3arm task"""
+    # df=df_out
     print(df.columns)
+    
     # extracting useful cols
-    df_sub = df[['subjID', 'trials.thisTrialN', 'touch_resp.clicked_name', 'corr']]
+    df_sub = df[['subjID', 'trials.thisTrialN', 'choice','rt', 'gain','loss']]
+    
     # rename cols
-    df_sub.rename(columns={'trials.thisTrialN': 'trial', 'touch_resp.clicked_name': 'cue'}, inplace=True)
+    df_sub.rename(columns={'trials.thisTrialN': 'trial'}, inplace=True)
+    
     # drop na
-    df_sub.dropna(subset=['cue'], inplace=True)
-    # convert touch to choice, check to make sure it matches generated probs
-    df_sub['cue'] = df_sub['cue'].map({
-        'button_upper_left':    1,
-        'button_upper_right':   2,
-        'button_lower_left':    3,
-        'button_lower_right':   4
-    })
-    # convert wins to gain col
-    df_sub['gain'] = df_sub['corr'].map({
-        0:0,    # nothing
-        1:1,    # win
-        11:1,   # win and loss
-        -1:0    # loss
-    })
-    # convert loss to loss
-    df_sub['loss'] = df_sub['corr'].map({
-        0:0,    # nothing
-        1:0,    # win
-        11:-1,   # win and loss
-        -1:-1    # loss
-    })
-    # removing corr col
-    df_sub = df_sub.drop('corr', axis=1)
+    df_sub.dropna(subset=['trial'], inplace=True)
+
     # convert all to int
-    df_sub = df_sub.astype(int)
+    df_sub.fillna(999,inplace=True)
+    df_sub[['trial','choice','gain','loss']] = df_sub[['trial','choice','gain','loss']].astype(int)
+
     # saving tsv
-    output_path = os.path.join(output_dir, 'bandit4arm_data.txt')
+    output_path = os.path.join(output_dir, 'bandit3arm_data.txt')
     df_sub.to_csv(output_path, index=None, sep='\t')
+    
     # print status
     print('\nbandit task data conversion done.')
 
@@ -142,6 +145,8 @@ if __name__ == "__main__":
     # parsing cl arguments
     task_name = sys.argv[1] # name of task
     task_dir = sys.argv[2] # path to the task repo
+    # task_name = 'generalise'
+    # task_dir = '../generalise'
     
     # make outputdir
     output_dir = './transformed_data'
