@@ -7,11 +7,15 @@ import os, sys
 import pandas as pd
 from pandas.errors import EmptyDataError
 
-def load_pavlovia(task_name, task_dir, output_dir='./transformed_data'):
+def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'):
     """load pavlovia repo of the task and the data within"""
     # check if this has data dir
     # task_name = 'generalise'
     # task_dir = '../generalise'
+    # # task_name = 'bandit3arm'
+    # # task_dir = '../bandit3arm'
+    # n_trials = 20
+    
     task_data_dir = os.path.join(task_dir, 'data')
     if not os.path.isdir(task_data_dir):
         raise ValueError('No Pavlovia data directory found.')
@@ -27,12 +31,15 @@ def load_pavlovia(task_name, task_dir, output_dir='./transformed_data'):
                     print(f'{f} is empty, skipping.')
                     continue
                 else:
-                    f_list.append(f)
+                    if (n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials): #check if data is complete
+                        print(f'{f} is not complete, skipping')                        
+                    else:
+                        f_list.append(f)
 
         # f_list = [f for f in os.listdir(task_data_dir) if not f.startswith('_') and f.endswith('.csv')]
         # sort data file according to date
         f_list_sorted = sorted(f_list, key=split_filename)
-    # print(f_list_sorted)
+    print(f_list_sorted)
     
     # load to panda df
     df_ls = []
@@ -145,8 +152,18 @@ if __name__ == "__main__":
     # parsing cl arguments
     task_name = sys.argv[1] # name of task
     task_dir = sys.argv[2] # path to the task repo
+    try: 
+        n_trials = int(sys.argv[3]) # how many trials are expected (check if data is complete)
+    except IndexError:
+        n_trials = -1
+    
+    # print(n_trials)
+    # task_name = 'bandit3arm'
+    # task_dir = '../bandit3arm'
     # task_name = 'generalise'
     # task_dir = '../generalise'
+    # n_trials = 20
+    
     
     # make outputdir
     output_dir = './transformed_data'
@@ -155,4 +172,4 @@ if __name__ == "__main__":
         os.mkdir(output_task_dir)
 
     # load data and convert
-    load_pavlovia(task_name, task_dir, output_dir=output_task_dir)
+    load_pavlovia(task_name, task_dir, n_trials, output_dir=output_task_dir)
