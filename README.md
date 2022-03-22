@@ -59,13 +59,14 @@ Please note Stan can take several hours to run for a large number of subjects/tr
 
 ## Visualisation
 
-For power calculation, to evaluate effect size and fitted parameter distribution, run:
+Once the simulations with different study design arguments are finished, you can proceed with power calculation, to evaluate effect size and fitted parameter distribution, run:
 
 ```eval
-python hdi_compare.py
+python visualisation/hdi_compare.py 160 3 bandit3arm_lapse 2 50
 ```
+Where the first argument is the number of trials used in the simulation (160), the second argument is the number of subjects in the simulation (3), the third argument corresponds to model name (bandit3arm_lapse), the forth specifies the number of simulations minus 1, and the last number of permutations.
 
-It's possible to modify task models and parameters inside `hdi_compare.py`. It's recommended to run at least 10 simulations (`draw_idx=10`) and permuate 100 times (`n_perm=100`) to ensure a good estimation of HDI stats.
+It's recommended to run at least 10 simulations (`draw_idx=10` / 4th argument above) and permuate 100 times (`n_perm=100` / last argument above) to ensure a good estimation of HDI stats.
   
 Output plots and statistics are in `./figs`.
 
