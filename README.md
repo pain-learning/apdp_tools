@@ -28,10 +28,10 @@ conda install -c conda-forge gxx_linux-64
 Data simulation is important to verify model assumptions. To simulate data and fit for bandit task, run the main script:
 
 ```train
-python simulations/sim_bandit4arm_combined.py pt 0 3 100
+python simulations/sim_bandit3arm_combined.py pt 0 3 100
 ```
 
-The example `sim_bandit4arm_combined` above runs the data simulation of a 4-arm bandit task (Seymour et al 2012 JNS) with given input parameters, fitted the sumulated data hierarchically using Stan and produce the parameter distribution in output sample traces. It has the following changable parameters:
+The example `sim_bandit3arm_combined` above runs the data simulation of a 3-arm bandit task (Seymour et al 2012 JNS) with given input parameters, fitted the sumulated data hierarchically using Stan and produce the parameter distribution in output sample traces. It has the following changable parameters:
 
 * pt - simulate patients (or use hc for controls). Change parameters inside main script.
 * seed number 0 (for power calcualtion, change seed to simulate multiple times)
@@ -42,16 +42,16 @@ Checking the fitted model parameters against the input model parameters (pt and 
 * `sim_generalise_gs.py` for generalisation instrumental avoidance task (Norbury et al. 2018 eLife)
 * `sim_motoradapt_single.py` for motor adaptation task (Takiyama 2016)
 * `sim_motorcircle_basic.py` for motor decision task (Kurniawan 2010)
-* `sim_bandit4arm_lapse.py` for the 4-arm bandit task as in the example, but with a simplified model.
+* `sim_bandit3arm_lapse.py` for the 3-arm bandit task as in the example, but with a simplified model.
 
-For power calculation, the simulation can be run n times with different random seeds (i.e. run the study n times) to estimate significance in group differences. For example, the loop below runs a simulation 50 times, each with 70 patients and controls completing 300 trials.
+For power calculation, the simulation can be run n times with different random seeds (i.e. run the study n times) to estimate significance in group differences. For example, the loop below runs a simulation 50 times, each with 70 patients and controls completing 240 trials.
 
 ```
 for sim_num in {0..50}
 do
 echo "submitted job simulation with seed $sim_num "
-python simulations/sim_bandit4arm_combined.py pt $sim_num 70 240
-python simulations/sim_bandit4arm_combined.py hc $sim_num 70 240
+python simulations/sim_bandit3arm_combined.py pt $sim_num 70 240
+python simulations/sim_bandit3arm_combined.py hc $sim_num 70 240
 done
 ```
 
@@ -70,6 +70,8 @@ It's recommended to run at least 10 simulations (`draw_idx=10` / 4th argument ab
   
 Output plots and statistics are in `./figs`.
 
+Other models names available are: 'motorcircle', 'motoradapt', 'bandit3arm_combined', 'bandit3arm_lapse', 'generalise'.
+
 ## Using your own data
 
 It's also possible to collect your own data and use that for analysis using this toolbox. Simply follow these steps:
@@ -80,10 +82,10 @@ It's also possible to collect your own data and use that for analysis using this
 * Run code in `data_transform` to convert Pavlovia data into model-compatible structure. For example, for the generalisation task, the stan compatible txt file can be found in `transformed_data`
 
 ```eval
-python data_transform/convert_data.py generalise ../generalisation_py
+python data_transform/convert_data.py generalise ../generalisation_py 240
 ```
 
-Currently, available task names include `generalise`, `bandit4arm`, `circlemotor`, which is specified in argument 1 above. The 2nd argument is the relative path of your Pavlovia task directory (forked from our source, cloned to your local machine). Alternatively, you can write your own data conversion function to match any changes you've made to the task. 
+Currently, available task names include `generalise`, `bandit3arm`, `circlemotor`, which is specified in argument 1 above. The 2nd argument is the relative path of your Pavlovia task directory (forked from our source, cloned to your local machine). Alternatively, you can write your own data conversion function to match any changes you've made to the task. Finally, the last optional argument specifies how many trials to expect in the dataset for each participant to reject files which are not complete, if not specified, incomplete files will be included.
 
 * Fit your data to models using scripts in `data_fit` (importing existing functions in `Simulation` above, but modified data input path), and visualise the results following `Visualisation`
 
