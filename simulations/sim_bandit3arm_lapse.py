@@ -1,15 +1,16 @@
 """
-data simulation and fitting for bandit 4-arm task (with lapse in model)
+data simulation and fitting for bandit 3-arm task (with lapse in model)
 """
 import os, sys
 import numpy as np
 import pandas as pd
 import stan
+from scipy.special import softmax
 
-from sim_bandit4arm_combined import bandit_combined_preprocess_func
+from sim_bandit3arm_combined import bandit_combined_preprocess_func
 
-def sim_bandit4arm_lapse(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=200, model_name='bandit4arm_lapse'):
-    """simulate 4 arm bandit data for multiple subjects"""
+def sim_bandit3arm_lapse(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=200, model_name='bandit3arm_lapse'):
+    """simulate 3 arm bandit data for multiple subjects"""
     multi_subject = []
     
     # generate new params
@@ -19,38 +20,38 @@ def sim_bandit4arm_lapse(param_dict, sd_dict, group_name, seed, num_sj=50, num_t
         sample_params[key] = np.random.normal(param_dict[key], sd_dict[key], size=1)[0]
     
     for sj in range(num_sj):
-        df_sj = model_bandit4arm_lapse(sample_params, sj, num_trial)
+        df_sj = model_bandit3arm_lapse(sample_params, sj, num_trial)
         multi_subject.append(df_sj)
         
     df_out = pd.concat(multi_subject)
     # saving output
-    output_dir = './tmp_output/bandit_lapse_sim/'
+    output_dir = './tmp_output/bandit3arm_lapse_sim_'+str(num_sj)+'/'
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
-    f_name = model_name+'_'+group_name+'_'+str(seed)
+    f_name = model_name+'_'+group_name+'_'+str(seed)+'_'+str(num_trial)+'_'+str(num_sj)
     df_out.to_csv(output_dir+f_name+'.txt', sep='\t', index=False)
     print(df_out)
     # return df_out
 
-def model_bandit4arm_lapse(param_dict, subjID, num_trial=200):
-    """simulate 4-arm bandit choices and outcomes"""
+def model_bandit3arm_lapse(param_dict, subjID, num_trial=200):
+    """simulate 3-arm bandit choices and outcomes"""
     # load reward/pain probabilities
-    pun_prob = pd.read_csv('./probs/pain_prob.csv').values
-    rew_prob = pd.read_csv('./probs/reward_prob.csv').values
+    pun_prob = pd.read_csv('./probs/pain_prob3arm_t240_jakubSmooth_01_28_10_21_01358.csv').values
+    rew_prob = pd.read_csv('./probs/reward_prob3arm_t240_jakubSmooth_01_28_10_21_01358.csv').values
     
     # initialise values
-    Qr = np.zeros(4)
-    Qp = np.zeros(4)
+    Qr = np.zeros(3)
+    Qp = np.zeros(3)
     
     # initial probabilities of choosing each deck
-    pD = 0.25 * np.ones(4)
+    pD = (1/3) * np.ones(3)
     
     # initialise output
     data_out = []
     # simulate trials
     for t in range(num_trial):
         # select a deck
-        tmpDeck = int(np.random.choice(np.arange(4), size=1, p=pD, replace=True))
+        tmpDeck = int(np.random.choice(np.arange(3), size=1, p=pD, replace=True))
 
         # compute tmpRew and tmpPun
         tmpRew = int(np.random.binomial(size=1, n=1, p=rew_prob[t, tmpDeck]))
@@ -77,10 +78,11 @@ def model_bandit4arm_lapse(param_dict, subjID, num_trial=200):
         Qsum = Qr + Qp
         
         # update pD for next trial
-        pD_pre = np.exp(Qsum) / sum(np.exp(Qsum))
+        # pD_pre = np.exp(Qsum) / sum(np.exp(Qsum))
+        pD_pre = softmax(Qsum-max(Qsum))
 
         # xi/lapse
-        pD = pD_pre * (1.-param_dict['xi']) + param_dict['xi']/4.
+        pD = pD_pre * (1.-param_dict['xi']) + param_dict['xi']/3.
         
         # output
         data_out.append([subjID, t, tmpDeck+1, int(tmpRew), int(tmpPun)])
@@ -133,24 +135,24 @@ if __name__ == "__main__":
     subj_num = int(sys.argv[3]) # subject number to simulate
     trial_num = int(sys.argv[4]) # trial number to simulate
 
-    model_name = 'bandit4arm_lapse'
+    model_name = 'bandit3arm_lapse'
     if group_name == 'hc':
         # simulate hc subjects with given params
-        sim_bandit4arm_lapse(param_dict_hc, sd_dict_hc, group_name, seed=seed_num,num_sj=subj_num, num_trial=trial_num, model_name=model_name)
+        sim_bandit3arm_lapse(param_dict_hc, sd_dict_hc, group_name, seed=seed_num,num_sj=subj_num, num_trial=trial_num, model_name=model_name)
     elif group_name == 'pt':
         # simulate pt subjects with given params
-        sim_bandit4arm_lapse(param_dict_pt, sd_dict_pt, group_name, seed=seed_num, num_sj=subj_num, num_trial=trial_num, model_name=model_name)
+        sim_bandit3arm_lapse(param_dict_pt, sd_dict_pt, group_name, seed=seed_num, num_sj=subj_num, num_trial=trial_num, model_name=model_name)
     else:
         print('check group name (hc or pt)')
 
     # parse simulated data
-    txt_path = f'./tmp_output/bandit_lapse_sim/bandit4arm_lapse_{group_name}_{seed_num}.txt'
+    txt_path = f'./tmp_output/bandit3arm_lapse_sim_{subj_num}/bandit3arm_lapse_{group_name}_{seed_num}_{trial_num}_{subj_num}.txt'
     data_dict = bandit_combined_preprocess_func(txt_path)
 
     # fit stan model
-    model_code = open('./models/bandit4arm_lapse.stan', 'r').read()
+    model_code = open('./models/bandit3arm_lapse.stan', 'r').read()
     posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample(num_samples=2000, num_chains=4)
+    fit = posterior.sample(num_samples=20, num_chains=1)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_Arew'].agg(['mean','var']))
     print(df['mu_Apun'].agg(['mean','var']))
@@ -158,16 +160,16 @@ if __name__ == "__main__":
     # saving traces
     pars = ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi']
     df_extracted = df[pars]
-    save_dir = './tmp_output/bandit_lapse_trace/'
+    save_dir = './tmp_output/bandit3arm_lapse_trace_'+str(subj_num)+'/'
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
-    sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
+    sfile = save_dir + f'{group_name}_sim_{seed_num}_{trial_num}_{subj_num}.csv'
     df_extracted.to_csv(sfile, index=None)
 
 
     # # fit
     # # Run the model and store results in "output"
-    # output = bandit4arm_lapse('./tmp_output/bandit_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
+    # output = bandit3arm_lapse('./tmp_output/bandit_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
     
     # # debug
     # print(output.fit)

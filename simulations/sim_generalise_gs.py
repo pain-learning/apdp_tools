@@ -25,7 +25,7 @@ def softmax_perception(s_cue, Q, beta, bias):
 
     # avoidance probability
     gx = 1./(1. + np.exp(-beta*(0. - pred_V - avoid_cost - bias)))
-    return gx    
+    return gx
 
 def draw_cue(num_trial):
     """drawing cues based on given probability"""
@@ -48,7 +48,7 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
     # Q = sigmoid(-0.2) * np.ones(num_state) # 7 possible cues
     Q = np.zeros(num_state) # 7 possible cues
     alpha = sigmoid(0.95) * np.ones(1) # initial learning rate
-    
+
     # initialise output
     data_out = []
 
@@ -60,7 +60,7 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
         # avoid or not
         p_avoid = softmax_perception(s_cue, Q, param_dict['beta'], param_dict['bias'])
         a = int(np.random.binomial(size=1, n=1, p=p_avoid))
-        # a = int(np.random.choice([0,1], size=1, 
+        # a = int(np.random.choice([0,1], size=1,
         #     p=[1-p_avoid, p_avoid], replace=True))
         # print(p_avoid, a)
 
@@ -106,7 +106,7 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
 
         # output
         data_out.append([subjID, t, s_cue, a, r])
-        
+
     df_out = pd.DataFrame(data_out)
     df_out.columns = ['subjID', 'trial', 'cue', 'choice', 'outcome']
     # print(df_out)
@@ -115,23 +115,23 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
 def sim_generalise_gs(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=190, model_name='generalise_gs'):
     """simulate generalise instrumental avoidance task for multiple subjects"""
     multi_subject = []
-    
+
     # generate new params
     np.random.seed(seed)
     sample_params = dict()
     for key in param_dict:
         sample_params[key] = np.random.normal(param_dict[key], sd_dict[key], size=1)[0]
-    
+
     for sj in range(num_sj):
         df_sj = model_generalise_gs(sample_params, sj, num_trial)
         multi_subject.append(df_sj)
-        
+
     df_out = pd.concat(multi_subject)
     # saving output
-    output_dir = './tmp_output/generalise_sim/'
+    output_dir = './tmp_output/generalise_sim_'+str(num_sj)+'/'
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
-    f_name = model_name+'_'+group_name+'_'+str(seed)
+    f_name = model_name+'_'+group_name+'_'+str(seed)+'_'+str(num_trial)+'_'+str(num_sj)
     df_out.to_csv(output_dir+f_name+'.txt', sep='\t', index=False)
     print(df_out)
 
@@ -220,21 +220,21 @@ if __name__ == "__main__":
     model_name = 'generalise_gs'
     if group_name == 'hc':
         # simulate hc subjects with given params
-        sim_generalise_gs(param_dict_hc, sd_dict_hc, group_name, seed=seed_num,num_sj=subj_num, model_name=model_name)
+        sim_generalise_gs(param_dict_hc, sd_dict_hc, group_name, seed=seed_num,num_sj=subj_num, num_trial=trial_num, model_name=model_name)
     elif group_name == 'pt':
         # simulate pt subjects with given params
-        sim_generalise_gs(param_dict_pt, sd_dict_pt, group_name, seed=seed_num, num_sj=subj_num, model_name=model_name)
+        sim_generalise_gs(param_dict_pt, sd_dict_pt, group_name, seed=seed_num, num_sj=subj_num, num_trial=trial_num, model_name=model_name)
     else:
         print('check group name (hc or pt)')
 
     # parse simulated data
-    txt_path = f'./tmp_output/generalise_sim/generalise_gs_{group_name}_{seed_num}.txt'
+    txt_path = f'./tmp_output/generalise_sim_{subj_num}/generalise_gs_{group_name}_{seed_num}_{trial_num}_{subj_num}.txt'
     data_dict = generalise_gs_preprocess_func(txt_path)
 
     # fit stan model
     model_code = open('./models/generalise_gs.stan', 'r').read()
     posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample(num_samples=2000, num_chains=4)
+    fit = posterior.sample(num_samples=20, num_chains=1)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_sigma_a'].agg(['mean','var']))
     print(df['mu_beta'].agg(['mean','var']))
@@ -242,10 +242,10 @@ if __name__ == "__main__":
     # saving traces
     pars = ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias']
     df_extracted = df[pars]
-    save_dir = './tmp_output/generalise_trace/'
+    save_dir = './tmp_output/generalise_trace_'+str(subj_num)+'/'
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
-    sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
+    sfile = save_dir + f'{group_name}_sim_{seed_num}_{trial_num}_{subj_num}.csv'
     df_extracted.to_csv(sfile, index=None)
 
 

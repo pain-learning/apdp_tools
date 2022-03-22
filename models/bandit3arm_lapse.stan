@@ -1,4 +1,4 @@
-// Seymour et al 2012 J neuro model, w/o C (chioce perseveration) but with xi (lapse rate)
+// Seymour et al 2012 J neuro model, w/o C (chioce perseveration) but with xi (lapse rate) - 3 arms
 data {
   int<lower=1> N;
   int<lower=1> T;
@@ -9,8 +9,8 @@ data {
 }
 
 transformed data {
-  vector[4] initV;
-  initV = rep_vector(0.0, 4);
+  vector[3] initV;
+  initV = rep_vector(0.0, 3);
 }
 
 parameters {
@@ -58,11 +58,11 @@ model {
 
   for (i in 1:N) {
     // Define values
-    vector[4] Qr;
-    vector[4] Qp;
-    vector[4] PEr_fic; // prediction error - for reward fictive updating (for unchosen options)
-    vector[4] PEp_fic; // prediction error - for punishment fictive updating (for unchosen options)
-    vector[4] Qsum;    // Qsum = Qrew + Qpun + perseverance
+    vector[3] Qr;
+    vector[3] Qp;
+    vector[3] PEr_fic; // prediction error - for reward fictive updating (for unchosen options)
+    vector[3] PEp_fic; // prediction error - for punishment fictive updating (for unchosen options)
+    vector[3] Qsum;    // Qsum = Qrew + Qpun + perseverance
 
     real Qr_chosen;
     real Qp_chosen;
@@ -76,7 +76,7 @@ model {
 
     for (t in 1:Tsubj[i]) {
       // softmax choice + xi (noise)
-      choice[i, t] ~ categorical(softmax(Qsum) * (1-xi[i]) + xi[i]/4);
+      choice[i, t] ~ categorical(softmax(Qsum) * (1-xi[i]) + xi[i]/3);
 
       // Prediction error signals
       PEr     = R[i] * rew[i, t] - Qr[choice[i, t]];
@@ -130,11 +130,11 @@ generated quantities {
   { // local section, this saves time and space
     for (i in 1:N) {
       // Define values
-      vector[4] Qr;
-      vector[4] Qp;
-      vector[4] PEr_fic; // prediction error - for reward fictive updating (for unchosen options)
-      vector[4] PEp_fic; // prediction error - for punishment fictive updating (for unchosen options)
-      vector[4] Qsum;    // Qsum = Qrew + Qpun + perseverance
+      vector[3] Qr;
+      vector[3] Qp;
+      vector[3] PEr_fic; // prediction error - for reward fictive updating (for unchosen options)
+      vector[3] PEp_fic; // prediction error - for punishment fictive updating (for unchosen options)
+      vector[3] Qsum;    // Qsum = Qrew + Qpun + perseverance
 
       real Qr_chosen;
       real Qp_chosen;
@@ -149,10 +149,10 @@ generated quantities {
 
       for (t in 1:Tsubj[i]) {
         // compute log likelihood of current trial
-        log_lik[i] += categorical_lpmf(choice[i, t] | softmax(Qsum) * (1-xi[i]) + xi[i]/4);
+        log_lik[i] += categorical_lpmf(choice[i, t] | softmax(Qsum) * (1-xi[i]) + xi[i]/3);
 
         // generate posterior prediction for current trial
-        y_pred[i, t] = categorical_rng(softmax(Qsum) * (1-xi[i]) + xi[i]/4);
+        y_pred[i, t] = categorical_rng(softmax(Qsum) * (1-xi[i]) + xi[i]/3);
 
         // Prediction error signals
         PEr     = R[i] * rew[i, t] - Qr[choice[i, t]];
@@ -177,4 +177,3 @@ generated quantities {
     }
   }
 }
-

@@ -163,7 +163,7 @@ if __name__ == "__main__":
     # task_name = 'generalise'
     # task_dir = '../generalise'
     # n_trials = 20
-    
+     
     
     # make outputdir
     output_dir = './transformed_data'

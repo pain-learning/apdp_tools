@@ -1,6 +1,4 @@
 subjID	participant
 1	XSUB
 2	XSUB
-3	4123.0
-4	XSUB
-5	XSUB
+3	XSUB
