@@ -50,8 +50,8 @@ For power calculation, the simulation can be run n times with different random s
 for sim_num in {0..50}
 do
 echo "submitted job simulation with seed $sim_num "
-python simulations/sim_bandit4arm_combined.py pt $sim_num 70 300
-python simulations/sim_bandit4arm_combined.py hc $sim_num 70 300
+python simulations/sim_bandit4arm_combined.py pt $sim_num 70 240
+python simulations/sim_bandit4arm_combined.py hc $sim_num 70 240
 done
 ```
 
