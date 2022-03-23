@@ -82,7 +82,7 @@ It's also possible to collect your own data and use that for analysis using this
 * Run code in `data_transform` to convert Pavlovia data into model-compatible structure. For example, for the generalisation task, the stan compatible txt file can be found in `transformed_data`
 
 ```eval
-python data_transform/convert_data.py generalise ../generalisation_py 240
+python data_transform/convert_data.py generalise ../generalisation_py 190
 ```
 
 Currently, available task names include `generalise`, `bandit3arm`, `circlemotor`, which is specified in argument 1 above. The 2nd argument is the relative path of your Pavlovia task directory (forked from our source, cloned to your local machine). Alternatively, you can write your own data conversion function to match any changes you've made to the task. Finally, the last optional argument specifies how many trials to expect in the dataset for each participant to reject files which are not complete, if not specified, incomplete files will be included.
