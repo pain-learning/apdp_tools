@@ -12,17 +12,17 @@ from sim_bandit3arm_combined import bandit_combined_preprocess_func
 def sim_bandit3arm_lapse(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=200, model_name='bandit3arm_lapse'):
     """simulate 3 arm bandit data for multiple subjects"""
     multi_subject = []
-    
+
     # generate new params
     np.random.seed(seed)
     sample_params = dict()
     for key in param_dict:
         sample_params[key] = np.random.normal(param_dict[key], sd_dict[key], size=1)[0]
-    
+
     for sj in range(num_sj):
         df_sj = model_bandit3arm_lapse(sample_params, sj, num_trial)
         multi_subject.append(df_sj)
-        
+
     df_out = pd.concat(multi_subject)
     # saving output
     output_dir = './tmp_output/bandit3arm_lapse_sim_'+str(num_sj)+'/'
@@ -38,14 +38,14 @@ def model_bandit3arm_lapse(param_dict, subjID, num_trial=200):
     # load reward/pain probabilities
     pun_prob = pd.read_csv('./probs/pain_prob3arm_t240_jakubSmooth_01_28_10_21_01358.csv').values
     rew_prob = pd.read_csv('./probs/reward_prob3arm_t240_jakubSmooth_01_28_10_21_01358.csv').values
-    
+
     # initialise values
     Qr = np.zeros(3)
     Qp = np.zeros(3)
-    
+
     # initial probabilities of choosing each deck
     pD = (1/3) * np.ones(3)
-    
+
     # initialise output
     data_out = []
     # simulate trials
@@ -66,7 +66,7 @@ def model_bandit3arm_lapse(param_dict, subjID, num_trial=200):
         Qr_chosen, Qp_chosen = [], []
         Qr_chosen = Qr[tmpDeck]
         Qp_chosen = Qp[tmpDeck]
-        
+
         # update Qr and Qp
         Qr += param_dict['Arew'] * PEr_fic
         Qp += param_dict['Apun'] * PEp_fic
@@ -76,17 +76,17 @@ def model_bandit3arm_lapse(param_dict, subjID, num_trial=200):
 
         # sum Q
         Qsum = Qr + Qp
-        
+
         # update pD for next trial
         # pD_pre = np.exp(Qsum) / sum(np.exp(Qsum))
         pD_pre = softmax(Qsum-max(Qsum))
 
         # xi/lapse
         pD = pD_pre * (1.-param_dict['xi']) + param_dict['xi']/3.
-        
+
         # output
         data_out.append([subjID, t, tmpDeck+1, int(tmpRew), int(tmpPun)])
-        
+
     df_out = pd.DataFrame(data_out)
     df_out.columns = ['subjID', 'trial', 'choice', 'gain', 'loss']
 
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         'xi':   0.018   # lapse
     }
 
-    # assumed patient parameters 
+    # assumed patient parameters
     param_dict_pt = {
         'Apun': 0.648,  # punishment learning rate
         'Arew': 0.337,  # reward learning rate
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     # fit stan model
     model_code = open('./models/bandit3arm_lapse.stan', 'r').read()
     posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample(num_samples=20, num_chains=1)
+    fit = posterior.sample(num_samples=2000, num_chains=4)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_Arew'].agg(['mean','var']))
     print(df['mu_Apun'].agg(['mean','var']))
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     # # fit
     # # Run the model and store results in "output"
     # output = bandit3arm_lapse('./tmp_output/bandit_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
-    
+
     # # debug
     # print(output.fit)
 
@@ -179,5 +179,3 @@ if __name__ == "__main__":
     # with open(sfile, 'wb') as op:
     #     tmp = { k: v for k, v in output.par_vals.items() if k in ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi'] } # dict comprehension
     #     pickle.dump(tmp, op)
-
-

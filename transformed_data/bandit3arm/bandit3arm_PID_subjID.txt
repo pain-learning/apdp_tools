@@ -1,4 +1,3 @@
 subjID	participant
-1	XSUB
-2	XSUB
-3	XSUB
+1	jo1
+2	ED1

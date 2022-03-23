@@ -7,7 +7,7 @@ import pandas as pd
 import stan
 
 sys.path.append('.')
-from simulations.sim_bandit3arm_combined import bandit_combined_preprocess_func 
+from simulations.sim_bandit3arm_combined import bandit_combined_preprocess_func
 
 
 if __name__ == "__main__":
@@ -25,12 +25,11 @@ if __name__ == "__main__":
     # txt_path = f'./transformed_data/circlemotor/circlemotor_data0.txt'
     txt_path = f'./transformed_data/bandit3arm/bandit3arm_data.txt'
     data_dict = bandit_combined_preprocess_func(txt_path)#, task_params=task_params)
-    print(data_dict)
     model_code = open('./models/bandit3arm_combLR_lapse_decay_b.stan', 'r').read()
 
     # fit stan model
     posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample( num_samples=2000, num_chains=4)
+    fit = posterior.sample(num_samples=2000, num_chains=4)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_Arew'].agg(['mean','var']))
     print(df['mu_Apun'].agg(['mean','var']))

@@ -10,11 +10,6 @@ from pandas.errors import EmptyDataError
 def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'):
     """load pavlovia repo of the task and the data within"""
     # check if this has data dir
-    # task_name = 'generalise'
-    # task_dir = '../generalise'
-    # # task_name = 'bandit3arm'
-    # # task_dir = '../bandit3arm'
-    # n_trials = 20
     
     task_data_dir = os.path.join(task_dir, 'data')
     if not os.path.isdir(task_data_dir):
@@ -24,17 +19,26 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
         f_list = []
         for f in os.listdir(task_data_dir):
             f_path = os.path.join(task_data_dir, f)
+            # print(f_path)
             if not f.startswith('_') and f.endswith('.csv'):
+
                 try:
-                    tmp = pd.read_csv(f_path)
+                    # print(f'{f}')
+                    tmp = pd.read_csv(f_path)                    
                 except:
                     print(f'{f} is empty, skipping.')
                     continue
                 else:
-                    if (n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials): #check if data is complete
+                    try:
+                        # tmp[['trials.thisTrialN']]
+                        if (n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials): #check if data is complete
+                            print(f'{f} is not complete, skipping')                        
+                        else:
+                            print(f'{f} is ok')
+                            print (len(tmp[['trials.thisTrialN']].dropna()))
+                            f_list.append(f)
+                    except:
                         print(f'{f} is not complete, skipping')                        
-                    else:
-                        f_list.append(f)
 
         # f_list = [f for f in os.listdir(task_data_dir) if not f.startswith('_') and f.endswith('.csv')]
         # sort data file according to date
@@ -45,10 +49,11 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
     df_ls = []
     df_pid_subjID = []
     id_count = 1
-    for f in f_list_sorted:
+    for f in f_list_sorted: #create unique subject ID + renumber trials
         csv_path = os.path.join(task_data_dir, f)
         df = pd.read_csv(csv_path)
         df['subjID'] = id_count
+        df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'] = (list(range(1,1+len(df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'])))) #renumber trials
         df_ls.append(df)
         df_pid_subjID.append(df[['subjID','participant']])
         id_count += 1
@@ -156,14 +161,7 @@ if __name__ == "__main__":
         n_trials = int(sys.argv[3]) # how many trials are expected (check if data is complete)
     except IndexError:
         n_trials = -1
-    
-    # print(n_trials)
-    # task_name = 'bandit3arm'
-    # task_dir = '../bandit3arm'
-    # task_name = 'generalise'
-    # task_dir = '../generalise'
-    # n_trials = 20
-     
+      
     
     # make outputdir
     output_dir = './transformed_data'

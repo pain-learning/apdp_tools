@@ -7,7 +7,7 @@ import pandas as pd
 import stan
 
 sys.path.append('.')
-from simulations.sim_generalise_gs import generalise_gs_preprocess_func 
+from simulations.sim_generalise_gs import generalise_gs_preprocess_func
 
 
 if __name__ == "__main__":
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     # fit stan model
     posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample( num_samples=2000, num_chains=4)
+    fit = posterior.sample(num_samples=2000, num_chains=4)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_sigma_a'].agg(['mean','var']))
     print(df['mu_beta'].agg(['mean','var']))

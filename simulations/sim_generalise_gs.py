@@ -153,7 +153,7 @@ def generalise_gs_preprocess_func(txt_path):
 
     # Write from subj_data to the data arrays
     for s in range(n_subj):
-        subj_data = subj_group[subj_group['subjID']==s]
+        subj_data = subj_group[subj_group['subjID']==subj_ls[s]]
         t = t_subjs[s]
         cue[s][:t] = subj_data['cue']
         choice[s][:t] = subj_data['choice']
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     # fit stan model
     model_code = open('./models/generalise_gs.stan', 'r').read()
     posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample(num_samples=20, num_chains=1)
+    fit = posterior.sample(num_samples=2000, num_chains=4)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_sigma_a'].agg(['mean','var']))
     print(df['mu_beta'].agg(['mean','var']))
