@@ -150,6 +150,8 @@ def generalise_gs_preprocess_func(txt_path):
     cue = np.full((n_subj, t_max), 0, dtype=int)
     choice = np.full((n_subj, t_max), -1, dtype=int)
     outcome = np.full((n_subj, t_max), -1, dtype=float)
+    rt = np.full((n_subj, t_max), -1, dtype=float)
+    subjID = np.full((n_subj),0,dtype=int)
 
     # Write from subj_data to the data arrays
     for s in range(n_subj):
@@ -158,6 +160,8 @@ def generalise_gs_preprocess_func(txt_path):
         cue[s][:t] = subj_data['cue']
         choice[s][:t] = subj_data['choice']
         outcome[s][:t] = -1 * np.abs(subj_data['outcome'])  # Use abs
+        subjID[s] = pd.unique(subj_data['subjID'])
+        rt[s][:t] = subj_data['rt']
 
     # Wrap into a dict for pystan
     data_dict = {
@@ -167,6 +171,8 @@ def generalise_gs_preprocess_func(txt_path):
         'cue': cue,
         'choice': choice,
         'outcome': outcome,
+        'rt': rt,
+        'subjID': subjID
     }
     # print(data_dict)
     # Returned data_dict will directly be passed to pystan

@@ -111,6 +111,8 @@ def bandit_combined_preprocess_func(txt_path):
     rew = np.full((n_subj, t_max), 0, dtype=float)
     los = np.full((n_subj, t_max), 0, dtype=float)
     choice = np.full((n_subj, t_max), -1, dtype=int)
+    rt = np.full((n_subj, t_max), -1, dtype=float)
+    subjID = np.full((n_subj),0,dtype=int)
 
     # Write from subj_data to the data arrays
     for s in range(n_subj):
@@ -119,6 +121,8 @@ def bandit_combined_preprocess_func(txt_path):
         rew[s][:t] = subj_data['gain']
         los[s][:t] = -1 * np.abs(subj_data['loss'])  # Use abs
         choice[s][:t] = subj_data['choice']
+        subjID[s] = pd.unique(subj_data['subjID'])
+        rt[s][:t] = subj_data['rt']
 
     # Wrap into a dict for pystan
     data_dict = {
@@ -128,6 +132,8 @@ def bandit_combined_preprocess_func(txt_path):
         'rew': rew,
         'los': los,
         'choice': choice,
+        'rt': rt,
+        'subjID': subjID
     }
     # print(data_dict)
     # Returned data_dict will directly be passed to pystan
