@@ -128,7 +128,7 @@ def sim_generalise_gs(param_dict, sd_dict, group_name, seed, num_sj=50, num_tria
 
     df_out = pd.concat(multi_subject)
     # saving output
-    output_dir = './tmp_output/generalise_sim_'+str(num_sj)+'/'
+    output_dir = './sim_output/generalise_sim_'+str(num_sj)+'/'
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
     f_name = model_name+'_'+group_name+'_'+str(seed)+'_'+str(num_trial)+'_'+str(num_sj)
@@ -152,6 +152,7 @@ def generalise_gs_preprocess_func(txt_path):
     outcome = np.full((n_subj, t_max), -1, dtype=float)
     rt = np.full((n_subj, t_max), -1, dtype=float)
     subjID = np.full((n_subj),0,dtype=int)
+    group_n = np.full(n_subj,'gr',dtype=object)
 
     # Write from subj_data to the data arrays
     for s in range(n_subj):
@@ -162,6 +163,7 @@ def generalise_gs_preprocess_func(txt_path):
         outcome[s][:t] = -1 * np.abs(subj_data['outcome'])  # Use abs
         subjID[s] = pd.unique(subj_data['subjID'])
         rt[s][:t] = subj_data['rt']
+        group_n[s] = pd.unique(subj_data['group'])[0]
 
     # Wrap into a dict for pystan
     data_dict = {
@@ -172,7 +174,8 @@ def generalise_gs_preprocess_func(txt_path):
         'choice': choice,
         'outcome': outcome,
         'rt': rt,
-        'subjID': subjID
+        'subjID': subjID,
+        'group': group_n
     }
     # print(data_dict)
     # Returned data_dict will directly be passed to pystan
@@ -234,7 +237,7 @@ if __name__ == "__main__":
         print('check group name (hc or pt)')
 
     # parse simulated data
-    txt_path = f'./tmp_output/generalise_sim_{subj_num}/generalise_gs_{group_name}_{seed_num}_{trial_num}_{subj_num}.txt'
+    txt_path = f'./sim_output/generalise_sim_{subj_num}/generalise_gs_{group_name}_{seed_num}_{trial_num}_{subj_num}.txt'
     data_dict = generalise_gs_preprocess_func(txt_path)
 
     # fit stan model
@@ -248,7 +251,7 @@ if __name__ == "__main__":
     # saving traces
     pars = ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias']
     df_extracted = df[pars]
-    save_dir = './tmp_output/generalise_trace_'+str(subj_num)+'/'
+    save_dir = './sim_output/generalise_trace_'+str(subj_num)+'/'
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
     sfile = save_dir + f'{group_name}_sim_{seed_num}_{trial_num}_{subj_num}.csv'
@@ -264,7 +267,7 @@ if __name__ == "__main__":
     # pars = ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias']
     # extracted = fit.extract(pars=pars, permuted=True)
     # # print(extracted)
-    # sfile = f'./tmp_output/generalise_sim/{group_name}_sim_{seed_num}.pkl'
+    # sfile = f'./sim_output/generalise_sim/{group_name}_sim_{seed_num}.pkl'
     # with open(sfile, 'wb') as op:
     #     tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
     #     pickle.dump(tmp, op)
@@ -272,13 +275,13 @@ if __name__ == "__main__":
     # hbayesdm method
     # # fit
     # # Run the model and store results in "output"
-    # output = generalise_gs('./tmp_output/generalise_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
+    # output = generalise_gs('./sim_output/generalise_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
 
     # # debug
     # print(output.fit)
 
     # # saving
-    # sfile = './tmp_output/generalise_sim/'+group_name+'_sim_'+str(seed_num)+'.pkl'
+    # sfile = './sim_output/generalise_sim/'+group_name+'_sim_'+str(seed_num)+'.pkl'
     # with open(sfile, 'wb') as op:
     #     tmp = { k: v for k, v in output.par_vals.items() if k in ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias'] } # dict comprehension
     #     pickle.dump(tmp, op)

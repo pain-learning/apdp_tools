@@ -25,7 +25,7 @@ def sim_motoradapt_single(param_dict, sd_dict, group_name, seed, num_sj=50, num_
     if plot:
         plot_state(df_out, plot_raw)
     # saving output
-    output_dir = './tmp_output/motoradapt_sim/'
+    output_dir = './sim_output/motoradapt_sim/'
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
     f_name = model_name+'_'+group_name+'_'+str(seed)
@@ -165,7 +165,7 @@ if __name__ == "__main__":
         print('check group name (hc or pt)')
 
     # parse simulated data
-    txt_path = f'./tmp_output/motoradapt_sim/motoradapt_single_{group_name}_{seed_num}.txt'
+    txt_path = f'./sim_output/motoradapt_sim/motoradapt_single_{group_name}_{seed_num}.txt'
     data_dict = motoradapt_preprocess_func(txt_path)
 
     # fit stan model
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     # saving traces
     pars = ['mu_A', 'mu_B', 'mu_sig']
     df_extracted = df[pars]
-    save_dir = './tmp_output/motoradapt_trace/'
+    save_dir = './sim_output/motoradapt_trace/'
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
     sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     # pars = ['mu_A', 'mu_B', 'mu_sig']
     # extracted = fit.extract(pars=pars, permuted=True)
     # # print(extracted)
-    # sfile = f'./tmp_output/motoradapt_sim/{group_name}_sim_{seed_num}.pkl'
+    # sfile = f'./sim_output/motoradapt_sim/{group_name}_sim_{seed_num}.pkl'
     # with open(sfile, 'wb') as op:
     #     tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
     #     pickle.dump(tmp, op)

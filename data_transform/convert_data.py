@@ -24,15 +24,16 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
 
                 try:
                     # print(f'{f}')
-                    tmp = pd.read_csv(f_path)                    
+                    tmp = pd.read_csv(f_path)           
+                    # print(tmp.columns)
                 except:
                     print(f'{f} is empty, skipping.')
                     continue
                 else:
                     try:
                         # tmp[['trials.thisTrialN']]
-                        if (n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials): #check if data is complete
-                            print(f'{f} is not complete, skipping')                        
+                        if ((n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
+                            print(f'{f} is not complete, skipping')
                         else:
                             print(f'{f} is ok')
                             print (len(tmp[['trials.thisTrialN']].dropna()))
@@ -55,14 +56,15 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
         df['subjID'] = id_count
         df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'] = (list(range(1,1+len(df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'])))) #renumber trials
         df_ls.append(df)
-        df_pid_subjID.append(df[['subjID','participant']])
+        df_pid_subjID.append(df[['subjID','participant','group']])
         id_count += 1
     df_out = pd.concat(df_ls)
-    
+     
     # mapping from PID to subjID
     df_pid_subjID = pd.concat(df_pid_subjID)
     df_pid_subjID.drop_duplicates('subjID',inplace=True)
     df_pid_subjID.fillna('XSUB',inplace=True)
+    df_pid_subjID.rename(columns={'participant':'ppt'},inplace=True)
     pidsub_path = os.path.join(output_dir, task_name+'_PID_subjID.txt')
     df_pid_subjID.to_csv(pidsub_path, index=None, sep='\t')
     
@@ -88,10 +90,9 @@ def split_filename(f_name):
 def transform_generalise(df, output_dir):
     """transform df into compatible csv for the generalisation task"""
     # df=df_out
-    print(df.columns)
     
     # extracting useful cols
-    df_sub = df[['subjID', 'trials.thisTrialN','cue', 'choice', 'rt', 'outcome']]
+    df_sub = df[['subjID', 'group','trials.thisTrialN','cue', 'choice', 'rt', 'outcome']]
     
     # rename cols
     df_sub.rename(columns={'trials.thisTrialN': 'trial'}, inplace=True)
@@ -116,7 +117,7 @@ def transform_bandit3arm(df, output_dir):
     print(df.columns)
     
     # extracting useful cols
-    df_sub = df[['subjID', 'trials.thisTrialN', 'choice','rt', 'gain','loss']]
+    df_sub = df[['subjID', 'group', 'trials.thisTrialN', 'choice','rt', 'gain','loss']]
     
     # rename cols
     df_sub.rename(columns={'trials.thisTrialN': 'trial'}, inplace=True)

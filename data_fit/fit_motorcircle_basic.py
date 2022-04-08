@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # saving traces
     pars = ['loss_sens', 'perturb']
     df_extracted = df[pars]
-    save_dir = './tmp_output/motorcircle_mydata_trace/'
+    save_dir = './data_output/motorcircle_mydata_trace/'
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
     sfile = save_dir + f'mydata_fit.csv'

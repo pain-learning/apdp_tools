@@ -22,7 +22,7 @@ def sim_motorcircle(task_params, param_dict, sd_dict, group_name, seed, num_sj=5
         
     df_out = pd.concat(multi_subject)
     # saving output
-    output_dir = './tmp_output/motorcircle_sim/'
+    output_dir = './sim_output/motorcircle_sim/'
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
     f_name = model_name+'_'+group_name+'_'+str(seed)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         print('check group name (hc or pt)')
 
     # parse simulated data
-    txt_path = f'./tmp_output/motorcircle_sim/motorcircle_near_{group_name}_{seed_num}.txt'
+    txt_path = f'./sim_output/motorcircle_sim/motorcircle_near_{group_name}_{seed_num}.txt'
     data_dict = motorcircle_preprocess_func(txt_path, task_params=task_near)
     # print(data_dict)
     model_code = open('./models/motorcircle_basic.stan', 'r').read()
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     # saving traces
     pars = ['loss_sens', 'perturb']
     df_extracted = df[pars]
-    save_dir = './tmp_output/motorcircle_trace/'
+    save_dir = './sim_output/motorcircle_trace/'
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
     sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
