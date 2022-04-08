@@ -145,8 +145,6 @@ if __name__ == "__main__":
         param_ls = ['mu_A', 'mu_B','mu_sig']
     elif model_name == 'bandit3arm_combined':
         param_ls = ['mu_Arew', 'mu_Apun','mu_R','mu_P','mu_xi','mu_d']
-    elif model_name == 'bandit3arm_lapse':
-        param_ls = ['mu_Arew', 'mu_Apun','mu_R','mu_P','mu_xi']
     elif model_name == 'generalise':
         param_ls = ['mu_sigma_a', 'mu_sigma_n','mu_eta','mu_kappa','mu_beta','mu_bias']
 
