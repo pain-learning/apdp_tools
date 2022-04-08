@@ -64,7 +64,7 @@ def hdi_stats(key, hdi_bounds):
     """calculate hdi bounds stats"""
     # print(hdi_bounds)
     dfb = pd.DataFrame(hdi_bounds)
-    dfb.columns = ['lower', 'upper']
+    dfb.columns = ['lower', 'upper'] 
     significant_sim, significant_neg, significant_pos = 0, 0, 0
     for _,row in dfb.iterrows():
         if np.sign(row['lower']) == np.sign(row['upper']) and row['lower']<0:
