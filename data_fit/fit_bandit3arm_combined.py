@@ -132,7 +132,7 @@ def comp_hdi_mean_data(model_name,param_ls, groups_comp=None):
 
 if __name__ == "__main__":
    # parse data
-     try:
+    try:    
         groups_comp = sys.argv[1]
         groups_comp = groups_comp.split(",")
     except IndexError:
@@ -149,6 +149,7 @@ if __name__ == "__main__":
     model_code = open('./models/bandit3arm_combLR_lapse_decay_b.stan', 'r').read()
     pars_ind = ['Arew', 'Apun', 'R', 'P', 'xi','d']
     pars = ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi','mu_d']
+    fits=[]
     for g in groups_comp:
         group_value = data_dict['group']
         print('Group: '+g)
@@ -171,6 +172,7 @@ if __name__ == "__main__":
         # fit stan model
         posterior = stan.build(program_code=model_code, data=data_dict_gr)
         fit = posterior.sample(num_samples=10, num_chains=4)
+        fits.append(fit)
         df = fit.to_frame()  # pandas `DataFrame, requires pandas
         data_dict_gr['group'] = group_value
 
@@ -195,6 +197,22 @@ if __name__ == "__main__":
         df_extracted.to_csv(sfile, index=None)
         df_ind.to_csv(s_ind_file, index=None)
         
+        diag_plot = az.plot_trace(fit,var_names=pars,compact=True,combined=True)
+        save_dir = './data_output/bandit3arm_combined_mydata/'
+        if not os.path.isdir(save_dir):
+            os.mkdir(save_dir)
+        save_name = 'diag_post_trace'+g+'.png'
+        fig = diag_plot.ravel()[0].figure
+        fig.savefig(save_dir+save_name,bbox_inches='tight',pad_inches=0)
+        
     comp_hdi_mean_data('bandit3arm_combined', param_ls=pars, groups_comp=groups_comp)
     plot_violin_params_mean('bandit3arm_combined', param_ls=pars, groups_comp=groups_comp)   
+
+       
+    hdi_plot = az.plot_forest(fits,model_names=groups_comp,var_names=pars,figsize=(7,7),combined=True)
+    fig = hdi_plot.ravel()[0].figure
+    save_name = 'HDI_comp'+''.join(groups_comp)+'.png'
+    save_dir = './data_output/bandit3arm_combined_mydata/'
+    fig.savefig(save_dir+save_name,bbox_inches='tight',pad_inches=0)
+
     
