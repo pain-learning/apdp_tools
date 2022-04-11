@@ -6,12 +6,13 @@ import numpy as np
 import pandas as pd
 import stan
 import arviz as az
-from matplotlib import pyplot as plt
+
 import seaborn as sns
 
 sys.path.append('.')
 from simulations.sim_generalise_gs import generalise_gs_preprocess_func
 from data_fit.fit_bandit3arm_combined import comp_hdi_mean_data
+from data_fit.fit_bandit3arm_combined import plot_violin_params_mean
 
 def extract_ind_results(df,pars_ind,data_dict):
     out_col_names = []
@@ -40,54 +41,15 @@ def extract_ind_results(df,pars_ind,data_dict):
         
     return out_df 
 
-def plot_violin_params(csv_params, model_name):
-    """plot violin of param means"""
-    csv_params = f'./data_output/generalise_mydata/param_statAB.csv'
-    model_names = 'generalise'
-    sns.set_theme(style="whitegrid")
-    df = pd.read_csv(csv_params)
-    df['parameter'] = df['param'].str.slice(3,)
-    param_ls = np.unique(df['parameter'])
-    n_param = len(param_ls)
-    if model_name=='motoradapt':
-        fig, ax = plt.subplots(1,n_param,figsize=(2,2.5))
-        leg_box = (-1,-0.1)
-    elif model_name=='generalise':
-        fig, ax = plt.subplots(1,n_param,figsize=(4.5,2.5))
-        leg_box = (-2,-0.1)
-    else:  
-        fig, ax = plt.subplots(1,n_param,figsize=(4,2.5))
-        leg_box = (-2, -0.1)
-    for n in range(n_param):
-        g= sns.violinplot(data=df[df['parameter']==param_ls[n]], x="parameter", y="param_mean", hue="group", split=True, inner="quart", linewidth=1,palette={"patient": "b", "control": ".85"}, ax=ax[n])
-        sns.despine(left=True)
-        g.set(ylabel=None)
-        ax[n].get_legend().remove()
-        ax[n].tick_params(axis='y', labelsize=8) 
-        if model_name=='motoradapt' and n==2:
-            g.set(yticklabels=[])
-        g.set(xlabel=None)
-    # plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-    plt.legend(loc='upper center', bbox_to_anchor=leg_box,
-          fancybox=True, shadow=True, ncol=2)
-    # save fig
-    save_dir = './figs/'+model_name+'/'
-    if not os.path.isdir(save_dir):
-        os.mkdir(save_dir)
-    save_name = 'param_mean'+'_'+str(num_trial)+'_'+str(num_sj)+'.png'
-    fig.savefig(save_dir+save_name,bbox_inches='tight',pad_inches=0)
-
 if __name__ == "__main__":
     try:
         groups_comp = sys.argv[1]
         groups_comp = groups_comp.split(",")
     except IndexError:
-        # groups_comp = ['None']
         groups_comp = ['']
         
     groups_comp=['A','B']
-   # parse data
-    # txt_path = f'./transformed_data/circlemotor/circlemotor_data0.txt'
+    # parse data
     txt_path = f'./transformed_data/generalise/generalise_data.txt'
     data_dict = generalise_gs_preprocess_func(txt_path)#, task_params=task_params)
     model_code = open('./models/generalise_gs.stan', 'r').read() # moved to y changes
@@ -142,6 +104,6 @@ if __name__ == "__main__":
         df_ind.to_csv(s_ind_file, index=None)
         
     comp_hdi_mean_data('generalise', param_ls=pars, groups_comp=groups_comp)
-    plot_violin_params(f'./data_output/generalise_mydata/param_statAB.csv',model_name = 'generalise')
+    plot_violin_params_mean('generalise', param_ls=pars, groups_comp=groups_comp)   
         
 

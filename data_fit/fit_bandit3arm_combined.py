@@ -8,7 +8,8 @@ import stan
 import arviz as az
 import nest_asyncio
 nest_asyncio.apply()
-
+from matplotlib import pyplot as plt
+import seaborn as sns
 
 sys.path.append('.')
 from simulations.sim_bandit3arm_combined import bandit_combined_preprocess_func
@@ -41,15 +42,48 @@ def extract_ind_results(df,pars_ind,data_dict):
 
     return out_df
 
+def plot_violin_params_mean(model_name,param_ls, groups_comp):
+    """plot violin of param means"""
+    df_all = pd.DataFrame()
+    palettes = {}
+    pcols = ["b", ".85"];
+    split_viol=len(groups_comp)==2
+    for g in range(0,len(groups_comp)):
+        csv_params = f'./data_output/'+model_name+'_mydata/mydata_fit_group_trace'+groups_comp[g]+'.csv'
+        df = pd.read_csv(csv_params)
+        df['group'] = groups_comp[g]
+        df_all = df_all.append(df)
+        palettes[groups_comp[g]] = pcols[g]
+
+    df_all_new = df_all.melt(id_vars='group',var_name='parameter')
+    n_param = len(param_ls)
+    fig, ax = plt.subplots(1,n_param,figsize=(15,5))
+    leg_box = (-1,-0.1)    
+    pcols = ["b", ".85"];
+    sns.set_theme(style="whitegrid")
+    for n in range(n_param):
+        g = sns.violinplot(data=df_all_new[df_all_new['parameter']==param_ls[n]], x="parameter", y="value",hue='group', split=split_viol, linewidth=1,palette=palettes, ax=ax[n])
+        sns.despine(left=True)
+        g.set(ylabel=None)
+        ax[n].get_legend().remove()
+        ax[n].tick_params(axis='y', labelsize=8) 
+        g.set(xlabel=None)
+    if split_viol:
+        plt.legend(loc='upper center', bbox_to_anchor=leg_box,
+              fancybox=True, shadow=True, ncol=2)
+    
+    save_dir = './data_output/'+model_name+'_mydata/'
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
+    save_name = 'violin_gr_plots_mean'+''.join(groups_comp)+'.png'
+    fig.savefig(save_dir+save_name,bbox_inches='tight',pad_inches=0)
+
+
+
 def comp_hdi_mean_data(model_name,param_ls, groups_comp=None):
     """
     compare hdi by drawing simulations (trace means)
     """
-    # model_name='bandit3arm_combined'
-    # groups_comp=['A','B']
-    # groups_comp=['']
-    # param_ls = ['mu_Arew', 'mu_Apun', 'mu_R', 'mu_P', 'mu_xi','mu_d']
-    # define sim dir
     output_dir = './data_output/'+model_name+'_mydata/'
     
     if groups_comp != ['']:
@@ -98,12 +132,10 @@ def comp_hdi_mean_data(model_name,param_ls, groups_comp=None):
 
 if __name__ == "__main__":
    # parse data
-    # txt_path = f'./transformed_data/circlemotor/circlemotor_data0.txt'
-    try:
+     try:
         groups_comp = sys.argv[1]
         groups_comp = groups_comp.split(",")
     except IndexError:
-        # groups_comp = ['None']
         groups_comp = ['']
 
     # print(groups_comp)
@@ -138,7 +170,7 @@ if __name__ == "__main__":
         data_dict_gr['N'] = data_dict_gr['rt'].shape[0]
         # fit stan model
         posterior = stan.build(program_code=model_code, data=data_dict_gr)
-        fit = posterior.sample(num_samples=10, num_chains=1)
+        fit = posterior.sample(num_samples=10, num_chains=4)
         df = fit.to_frame()  # pandas `DataFrame, requires pandas
         data_dict_gr['group'] = group_value
 
@@ -164,3 +196,5 @@ if __name__ == "__main__":
         df_ind.to_csv(s_ind_file, index=None)
         
     comp_hdi_mean_data('bandit3arm_combined', param_ls=pars, groups_comp=groups_comp)
+    plot_violin_params_mean('bandit3arm_combined', param_ls=pars, groups_comp=groups_comp)   
+    
