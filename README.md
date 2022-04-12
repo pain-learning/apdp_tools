@@ -4,7 +4,7 @@ This repository is the code used for data simulation and analysis for pain (ADPD
 
 ## Requirements
 
-Please clone this repo to your machine. Create a new conda environment `apdp_tools` with the given requirements (nobuild and explicit also available):
+Please clone this repo to your machine. Create a new conda environment `apdp_tools` with the given requirements (nobuild and explicit also available). You can also use enviornment_mac.yml that was tested on macOS:
 
 ```setup
 conda env create -f environment.yml
@@ -22,6 +22,8 @@ If pystan3 throws a compiler error, install the latest GCC and G++ compilers fro
 conda install -c conda-forge gcc_linux-64
 conda install -c conda-forge gxx_linux-64
 ```
+
+If there are some some issues, try installing pystan in a new environment as <a href='https://pystan.readthedocs.io/en/latest/installation.html'>here</a>
    
 ## Simulations
 
