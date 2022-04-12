@@ -91,7 +91,9 @@ Currently, available task names include `generalise`, `bandit3arm`, `circlemotor
 python data_dit/fit_bandit3arm_combined.py A,B
 ```
 
-the first argument e.g 'A,B' specifies the names of two groups in your dataset, you can also leave this blank and the script will ignore the groups. You should get group parameter traces, individual parameters and some behavioura summary for each subject, as ewll as 95% HDI differences if groups are specified. Moreover, you will also get HDI plots, as well as plots of posterior and traces for each group parameter. Lastly, you should also get violin plots for group parameters (either group comparision or just one for all subjects combined).
+the first argument e.g 'A,B' specifies the names of two groups in your dataset, you can also leave this blank and the script will ignore the groups. 
+
+As a result, you should get group parameter traces (CSV), individual parameters and some behavioural summary for each subject in CSV. Moreover, 95% HDI differences if groups are specified will be included in CSV file. You will also get HDI plots, as well as plots of posterior and traces for each group parameter either for all subjects combined or by group. Lastly, you should also get violin plots for group parameters (either group comparision or just one for all subjects combined).
 
 ## License
 
