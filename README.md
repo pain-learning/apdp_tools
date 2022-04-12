@@ -42,7 +42,6 @@ Checking the fitted model parameters against the input model parameters (pt and 
 * `sim_generalise_gs.py` for generalisation instrumental avoidance task (Norbury et al. 2018 eLife)
 * `sim_motoradapt_single.py` for motor adaptation task (Takiyama 2016)
 * `sim_motorcircle_basic.py` for motor decision task (Kurniawan 2010)
-* `sim_bandit3arm_lapse.py` for the 3-arm bandit task as in the example, but with a simplified model.
 
 For power calculation, the simulation can be run n times with different random seeds (i.e. run the study n times) to estimate significance in group differences. For example, the loop below runs a simulation 50 times, each with 70 patients and controls completing 240 trials.
 
@@ -62,15 +61,15 @@ Please note Stan can take several hours to run for a large number of subjects/tr
 Once the simulations with different study design arguments are finished, you can proceed with power calculation, to evaluate effect size and fitted parameter distribution, run:
 
 ```eval
-python visualisation/hdi_compare.py 160 3 bandit3arm_lapse 2 50
+python visualisation/hdi_compare.py 160 3 sim_bandit3arm_combined 2 50
 ```
-Where the first argument is the number of trials used in the simulation (160), the second argument is the number of subjects in the simulation (3), the third argument corresponds to model name (bandit3arm_lapse), the forth specifies the number of simulations minus 1, and the last number of permutations.
+Where the first argument is the number of trials used in the simulation (160), the second argument is the number of subjects in the simulation (3), the third argument corresponds to model name (sim_bandit3arm_combined), the fourth specifies the number of simulations minus 1, and the last number of permutations.
 
-It's recommended to run at least 10 simulations (`draw_idx=10` / 4th argument above) and permuate 100 times (`n_perm=100` / last argument above) to ensure a good estimation of HDI stats.
+It's recommended to run at least 10 simulations (`draw_idx=10` / 4th argument above) and permutate 100 times (`n_perm=100` / last argument above) to ensure a good estimation of HDI stats.
   
 Output plots and statistics are in `./figs`.
 
-Other models names available are: 'motorcircle', 'motoradapt', 'bandit3arm_combined', 'bandit3arm_lapse', 'generalise'.
+Other models names available are: 'motorcircle', 'motoradapt', 'bandit3arm_combined', 'generalise'.
 
 ## Using your own data
 
