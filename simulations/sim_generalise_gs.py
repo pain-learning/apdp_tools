@@ -37,7 +37,7 @@ def draw_cue(num_trial):
         trial_type.append(smp+1) # match matlab number
     return trial_type
 
-def model_generalise_gs(param_dict, subjID, num_trial=190):
+def model_generalise_gs(param_dict, subjID, group_name, num_trial=190):
     """simulate shapes, avoid actions, and shock outcomes"""
     # load predefined image sequences (38 trials x 5 blocks)
     # trial_type = np.squeeze(pd.read_csv('./probs/generalise_stim.csv').values) # 1:7
@@ -51,6 +51,7 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
 
     # initialise output
     data_out = []
+    rt = 0
 
     # simulate trials
     for t in range(num_trial):
@@ -105,10 +106,10 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
         alpha = param_dict['eta']*np.abs(PE) + (1-param_dict['eta'])*alpha
 
         # output
-        data_out.append([subjID, t, s_cue, a, r])
+        data_out.append([subjID, group_name, t, s_cue, a, rt, r])
 
     df_out = pd.DataFrame(data_out)
-    df_out.columns = ['subjID', 'trial', 'cue', 'choice', 'outcome']
+    df_out.columns = ['subjID', 'group', 'trial', 'cue', 'choice', 'rt', 'outcome']
     # print(df_out)
     return df_out
 
@@ -123,7 +124,7 @@ def sim_generalise_gs(param_dict, sd_dict, group_name, seed, num_sj=50, num_tria
         sample_params[key] = np.random.normal(param_dict[key], sd_dict[key], size=1)[0]
 
     for sj in range(num_sj):
-        df_sj = model_generalise_gs(sample_params, sj, num_trial)
+        df_sj = model_generalise_gs(sample_params, sj, group_name, num_trial)
         multi_subject.append(df_sj)
 
     df_out = pd.concat(multi_subject)
@@ -239,11 +240,13 @@ if __name__ == "__main__":
     # parse simulated data
     txt_path = f'./sim_output/generalise_sim_{subj_num}/generalise_gs_{group_name}_{seed_num}_{trial_num}_{subj_num}.txt'
     data_dict = generalise_gs_preprocess_func(txt_path)
-
+    data_dict_gr = data_dict
+    data_dict_gr.pop('group') 
+                     
     # fit stan model
     model_code = open('./models/generalise_gs.stan', 'r').read()
-    posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample(num_samples=2000, num_chains=4)
+    posterior = stan.build(program_code=model_code, data=data_dict_gr)
+    fit = posterior.sample(num_samples=20, num_chains=4)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_sigma_a'].agg(['mean','var']))
     print(df['mu_beta'].agg(['mean','var']))

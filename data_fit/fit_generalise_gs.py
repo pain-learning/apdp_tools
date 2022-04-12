@@ -48,7 +48,7 @@ if __name__ == "__main__":
     except IndexError:
         groups_comp = ['']
         
-    groups_comp=['A','B']
+    # groups_comp=['A','B']
     # parse data
     txt_path = f'./transformed_data/generalise/generalise_data.txt'
     data_dict = generalise_gs_preprocess_func(txt_path)#, task_params=task_params)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         
         # fit stan model
         posterior = stan.build(program_code=model_code, data=data_dict_gr)
-        fit = posterior.sample(num_samples=10, num_chains=1)
+        fit = posterior.sample(num_samples=500, num_chains=4)
         fits.append(fit)
         df = fit.to_frame()  # pandas `DataFrame, requires pandas
         data_dict_gr['group'] = group_value

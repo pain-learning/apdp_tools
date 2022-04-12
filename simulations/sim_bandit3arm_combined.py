@@ -40,6 +40,7 @@ def model_bandit3arm_combined(param_dict, subjID, group_name, num_trial=200):
     # initialise values
     Qr = np.zeros(3)
     Qp = np.zeros(3)
+    rt = 0
 
     # initial probabilities of choosing each deck
     pD = (1/3) * np.ones(3)
@@ -88,10 +89,10 @@ def model_bandit3arm_combined(param_dict, subjID, group_name, num_trial=200):
         pD = pD_pre * (1.-param_dict['xi']) + param_dict['xi']/3.
 
         # output
-        data_out.append([subjID, group_name, t, tmpDeck+1, int(tmpRew), int(tmpPun)])
+        data_out.append([subjID, group_name, t, tmpDeck+1, rt, int(tmpRew), int(tmpPun)])
 
     df_out = pd.DataFrame(data_out)
-    df_out.columns = ['subjID', 'group','trial', 'choice', 'gain', 'loss']
+    df_out.columns = ['subjID', 'group','trial', 'choice', 'rt', 'gain', 'loss']
 
     return df_out
 
@@ -202,11 +203,12 @@ if __name__ == "__main__":
     # parse simulated data
     txt_path = f'./sim_output/bandit3arm_combined_sim_{subj_num}/bandit3arm_combined_{group_name}_{seed_num}_{trial_num}_{subj_num}.txt'
     data_dict = bandit_combined_preprocess_func(txt_path)
-
+    data_dict_gr = data_dict
+    data_dict_gr.pop('group')
     # fit stan model
     model_code = open('./models/bandit3arm_combLR_lapse_decay_b.stan', 'r').read()
-    posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample(num_samples=2000, num_chains=4)
+    posterior = stan.build(program_code=model_code, data=data_dict_gr)
+    fit = posterior.sample(num_samples=20, num_chains=4)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_Arew'].agg(['mean','var']))
     print(df['mu_Apun'].agg(['mean','var']))

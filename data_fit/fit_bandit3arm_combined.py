@@ -139,9 +139,9 @@ if __name__ == "__main__":
         groups_comp = ['']
 
     # print(groups_comp)
-    groups_comp = 'A,B'
-    groups_comp=groups_comp.split(",")
-    groups_comp = ['']
+    # groups_comp = 'A,B'
+    # groups_comp=groups_comp.split(",")
+    # groups_comp = ['']
 
 
     txt_path = f'./transformed_data/bandit3arm/bandit3arm_data.txt'
