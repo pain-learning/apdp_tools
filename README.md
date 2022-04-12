@@ -39,7 +39,7 @@ The example `sim_bandit3arm_combined` above runs the data simulation of a 3-arm 
 * each participant to complete 100 trials (or a different number of your choice)
 
 Checking the fitted model parameters against the input model parameters (pt and hc dictionaries in the simulation code) can give an idea of how well the model fitting works. In addition, there are a list of other tasks:
-* `sim_generalise_gs.py` for generalisation instrumental avoidance task (Norbury et al. 2018 eLife)
+* `sim_generalise_gs.py` for generalisation instrumental avoidance task (Norbury et al. 2018 eLife) - start with 190 trials first to see if the simulations are working, the code doesn't work for specific number of trials due to the study design
 * `sim_motoradapt_single.py` for motor adaptation task (Takiyama 2016)
 * `sim_motorcircle_basic.py` for motor decision task (Kurniawan 2010)
 
