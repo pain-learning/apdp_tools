@@ -31,15 +31,25 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
                     continue
                 else:
                     try:
-                        # tmp[['trials.thisTrialN']]
-                        if ((n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
-                            print(f'{f} is not complete, skipping')
+                        if 'gonogo' in task_name:
+                            # if ((n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
+                            if ((n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials)): #check if data is complete
+                                print(f'{f} is not complete, skipping')
+                            else:
+                                print(f'{f} is ok')
+                                print(len(tmp[['trials2.thisTrialN']].dropna()))
+                                f_list.append(f)
                         else:
-                            print(f'{f} is ok')
-                            print (len(tmp[['trials.thisTrialN']].dropna()))
-                            f_list.append(f)
+                            if ((n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
+                                print(f'{f} is not complete, skipping')
+                            else:
+                                print(f'{f} is ok')
+                                print(len(tmp[['trials.thisTrialN']].dropna()))
+                                f_list.append(f)
+                        
+                            
                     except:
-                        print(f'{f} is not complete, skipping')                        
+                        print(f'{f} is not complete, skipping')                 
 
         # f_list = [f for f in os.listdir(task_data_dir) if not f.startswith('_') and f.endswith('.csv')]
         # sort data file according to date
@@ -54,9 +64,13 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
         csv_path = os.path.join(task_data_dir, f)
         df = pd.read_csv(csv_path)
         df['subjID'] = id_count
-        df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'] = (list(range(1,1+len(df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'])))) #renumber trials
+        if 'gonogo' in task_name:
+            df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN'] = (list(range(1,1+len(df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN'])))) #renumber trials
+        else:
+            df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'] = (list(range(1,1+len(df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'])))) #renumber trials     
         df_ls.append(df)
-        df_pid_subjID.append(df[['subjID','participant','group']])
+        # df_pid_subjID.append(df[['subjID','participant','group']])
+        df_pid_subjID.append(df[['subjID','participant']])
         id_count += 1
     df_out = pd.concat(df_ls)
      
@@ -75,6 +89,8 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
         transform_bandit3arm(df_out, output_dir=output_dir)
     elif 'circlemotor' in task_name:
         transform_motorcircle(df_out, output_dir=output_dir)
+    elif 'gonogo' in task_name:
+        transform_gonogo(df_out, output_dir=output_dir)
     else:
         raise ValueError('Data transform for the task not yet implemented. \nPlease use the following: bandit4arm, generalise, circlemotor.\nAlternatively, you can write your own data conversion pipeline following the example functions here, to match the data format in simulated data.')
 
@@ -135,6 +151,39 @@ def transform_bandit3arm(df, output_dir):
     
     # print status
     print('\nbandit task data conversion done.')
+
+def transform_gonogo(df, output_dir):
+    """transform df into compatible csv for the gonogo task"""
+    # df=df_out
+    # print(df.columns)
+    
+    # extracting useful cols
+    # df_sub_raw = df[['subjID', 'group', 'trials.thisTrialN', 'subj_choice', 'cue1', 'cue2', 'cue3', 'resultGo', 'resultNoGo']] ## should ideally also capture group and rt
+    df_sub_raw = df[['subjID', 'trials2.thisTrialN', 'subj_choice', 'cue1', 'cue2', 'cue3', 'resultGo', 'resultNoGo']]
+    df_sub_raw = df_sub_raw[df_sub_raw['trials2.thisTrialN'].notna()]
+    # rename cols
+    df_sub_raw.rename(columns={'trials2.thisTrialN': 'trial'}, inplace=True)
+    df_sub_raw['keyPressed'] = 1*(df_sub_raw['subj_choice']=='Go') + 0*(df_sub_raw['subj_choice']=='NoGo')
+    df_sub_raw['cue'] = 1*df_sub_raw['cue1'] + 2*df_sub_raw['cue2'] + 3*df_sub_raw['cue3'] 
+    df_sub_raw['outcome'] = df_sub_raw['keyPressed']*df_sub_raw['resultGo'] + (1-df_sub_raw['keyPressed'])*df_sub_raw['resultNoGo'] 
+    print(df_sub_raw[['outcome', 'keyPressed', 'resultGo', 'resultNoGo']])
+
+
+    df_sub = df_sub_raw[['subjID', 'trial', 'cue', 'keyPressed', 'outcome']]
+
+    # drop na
+    df_sub.dropna(subset=['trial'], inplace=True)
+
+    # convert all to int
+    df_sub.fillna(999,inplace=True)
+    df_sub[['subjID', 'trial', 'cue', 'keyPressed', 'outcome']] = df_sub[['subjID', 'trial', 'cue', 'keyPressed', 'outcome']].astype(int)
+
+    # saving tsv
+    output_path = os.path.join(output_dir, 'gonogo_data.txt')
+    df_sub.to_csv(output_path, index=None, sep='\t')
+    
+    # print status
+    print('\gonogo task data conversion done.')
 
 def transform_motorcircle(df, output_dir):
     """transform df into compatible csv for circlemotor task"""
