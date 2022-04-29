@@ -1,3 +1,4 @@
-subjID	ppt
-1	XSUB
-2	XSUB
+subjID	ppt	group
+1	online-test-mobile	A
+2	online-test-mobile	A
+3	online-test-laptop	B

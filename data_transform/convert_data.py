@@ -32,8 +32,7 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
                 else:
                     try:
                         if 'gonogo' in task_name:
-                            # if ((n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
-                            if ((n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials)): #check if data is complete
+                            if ((n_trials != -1) and (len(tmp[['trials1.thisTrialN']].dropna()) + len(tmp[['trials2.thisTrialN']].dropna()) !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
                                 print(f'{f} is not complete, skipping')
                             else:
                                 print(f'{f} is ok')
@@ -49,7 +48,7 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
                         
                             
                     except:
-                        print(f'{f} is not complete, skipping')                 
+                        print(f'{f} is not complete, skipping')                
 
         # f_list = [f for f in os.listdir(task_data_dir) if not f.startswith('_') and f.endswith('.csv')]
         # sort data file according to date
@@ -65,12 +64,13 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
         df = pd.read_csv(csv_path)
         df['subjID'] = id_count
         if 'gonogo' in task_name:
-            df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN'] = (list(range(1,1+len(df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN'])))) #renumber trials
+            df.loc[~df['trials2.thisTrialN'].isna(),'trial'] = (list(range(1,1+len(df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN'])))) #renumber trials
+            df.loc[~df['trials1.thisTrialN'].isna(),'trial'] = (list(range(1+len(df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN']),1+len(df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN'])+len(df.loc[~df['trials1.thisTrialN'].isna(),'trials1.thisTrialN'])))) #renumber trials
         else:
             df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'] = (list(range(1,1+len(df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'])))) #renumber trials     
         df_ls.append(df)
-        # df_pid_subjID.append(df[['subjID','participant','group']])
-        df_pid_subjID.append(df[['subjID','participant']])
+        df_pid_subjID.append(df[['subjID','participant','group']])
+        # df_pid_subjID.append(df[['subjID','participant']])
         id_count += 1
     df_out = pd.concat(df_ls)
      
@@ -158,18 +158,16 @@ def transform_gonogo(df, output_dir):
     # print(df.columns)
     
     # extracting useful cols
-    # df_sub_raw = df[['subjID', 'group', 'trials.thisTrialN', 'subj_choice', 'cue1', 'cue2', 'cue3', 'resultGo', 'resultNoGo']] ## should ideally also capture group and rt
-    df_sub_raw = df[['subjID', 'trials2.thisTrialN', 'subj_choice', 'cue1', 'cue2', 'cue3', 'resultGo', 'resultNoGo']]
-    df_sub_raw = df_sub_raw[df_sub_raw['trials2.thisTrialN'].notna()]
-    # rename cols
-    df_sub_raw.rename(columns={'trials2.thisTrialN': 'trial'}, inplace=True)
+    df_sub_raw = df[['subjID', 'group', 'trial', 'subj_choice', 'cue1', 'cue2', 'cue3', 'resultGo', 'resultNoGo', 'rt']]
+    
+    # make cols
     df_sub_raw['keyPressed'] = 1*(df_sub_raw['subj_choice']=='Go') + 0*(df_sub_raw['subj_choice']=='NoGo')
     df_sub_raw['cue'] = 1*df_sub_raw['cue1'] + 2*df_sub_raw['cue2'] + 3*df_sub_raw['cue3'] 
     df_sub_raw['outcome'] = df_sub_raw['keyPressed']*df_sub_raw['resultGo'] + (1-df_sub_raw['keyPressed'])*df_sub_raw['resultNoGo'] 
     print(df_sub_raw[['outcome', 'keyPressed', 'resultGo', 'resultNoGo']])
 
 
-    df_sub = df_sub_raw[['subjID', 'trial', 'cue', 'keyPressed', 'outcome']]
+    df_sub = df_sub_raw[['subjID', 'group', 'trial', 'cue', 'keyPressed', 'outcome', 'rt']]
 
     # drop na
     df_sub.dropna(subset=['trial'], inplace=True)

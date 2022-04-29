@@ -1,10 +1,8 @@
-#include /pre/license.stan
-
 data {
   int<lower=1> N;
   int<lower=1> T;
   int<lower=1, upper=T> Tsubj[N];
-  int<lower=1, upper=4> cue[N, T];
+  int<lower=1, upper=3> cue[N, T];
   int<lower=-1, upper=1> pressed[N, T];
   real outcome[N, T];
 }
@@ -57,9 +55,12 @@ model {
   mu_pr[5]  ~ normal(0, 1.0);
   mu_pr[6]  ~ normal(0, 1.0);
   mu_pr[7]  ~ normal(0, 1.0);
-  sigma[1:2] ~ normal(0, 0.2);
+  sigma[1] ~ normal(0, 0.2);
+  sigma[2] ~ normal(0, 0.2);
   sigma[3] ~ cauchy(0, 1.0);
-  sigma[4:6]   ~ normal(0, 0.2);
+  sigma[4]   ~ normal(0, 0.2);
+  sigma[5]   ~ normal(0, 0.2);
+  sigma[6]   ~ normal(0, 0.2);
   sigma[7] ~ cauchy(0, 1.0);
 
   // individual parameters w/ Matt trick
