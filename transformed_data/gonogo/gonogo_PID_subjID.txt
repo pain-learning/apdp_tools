@@ -1,4 +1,2 @@
 subjID	ppt	group
-1	online-test-mobile	A
-2	online-test-mobile	A
-3	online-test-laptop	B
+1	Pm-test-144trials	B

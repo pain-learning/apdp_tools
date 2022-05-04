@@ -32,11 +32,12 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
                 else:
                     try:
                         if 'gonogo' in task_name:
-                            if ((n_trials != -1) and (len(tmp[['trials1.thisTrialN']].dropna()) + len(tmp[['trials2.thisTrialN']].dropna()) !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
+                            total_len = len(tmp[['trials1_part1.thisTrialN']].dropna()) + len(tmp[['trials1_part2.thisTrialN']].dropna()) + len(tmp[['trials2_part1.thisTrialN']].dropna()) + len(tmp[['trials2_part2.thisTrialN']].dropna())
+                            if ((n_trials != -1) and (total_len !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
                                 print(f'{f} is not complete, skipping')
                             else:
                                 print(f'{f} is ok')
-                                print(len(tmp[['trials2.thisTrialN']].dropna()))
+                                print(total_len)
                                 f_list.append(f)
                         else:
                             if ((n_trials != -1) and (len(tmp[['trials.thisTrialN']].dropna()) !=n_trials)) or (('group' not in tmp.columns)): #check if data is complete
@@ -64,8 +65,11 @@ def load_pavlovia(task_name, task_dir, n_trials, output_dir='./transformed_data'
         df = pd.read_csv(csv_path)
         df['subjID'] = id_count
         if 'gonogo' in task_name:
-            df.loc[~df['trials2.thisTrialN'].isna(),'trial'] = (list(range(1,1+len(df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN'])))) #renumber trials
-            df.loc[~df['trials1.thisTrialN'].isna(),'trial'] = (list(range(1+len(df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN']),1+len(df.loc[~df['trials2.thisTrialN'].isna(),'trials2.thisTrialN'])+len(df.loc[~df['trials1.thisTrialN'].isna(),'trials1.thisTrialN'])))) #renumber trials
+            df.loc[~df['trials2_part1.thisTrialN'].isna(),'trial'] = (list(range(1,1+len(df.loc[~df['trials2_part1.thisTrialN'].isna(),'trials2_part1.thisTrialN'])))) #renumber trials
+            df.loc[~df['trials2_part2.thisTrialN'].isna(),'trial'] = (list(range(1+len(df.loc[~df['trials2_part1.thisTrialN'].isna(),'trials2_part1.thisTrialN']),  1+len(df.loc[~df['trials2_part1.thisTrialN'].isna(),'trials2_part1.thisTrialN'])+len(df.loc[~df['trials2_part2.thisTrialN'].isna(),'trials2_part2.thisTrialN'])))) #renumber trials
+            df.loc[~df['trials1_part1.thisTrialN'].isna(),'trial'] = (list(range(1+len(df.loc[~df['trials2_part1.thisTrialN'].isna(),'trials2_part1.thisTrialN'])+len(df.loc[~df['trials2_part2.thisTrialN'].isna(),'trials2_part2.thisTrialN']),  1+len(df.loc[~df['trials2_part1.thisTrialN'].isna(),'trials2_part1.thisTrialN'])+len(df.loc[~df['trials2_part2.thisTrialN'].isna(),'trials2_part2.thisTrialN'])+len(df.loc[~df['trials1_part1.thisTrialN'].isna(),'trials1_part1.thisTrialN'])))) #renumber trials
+            df.loc[~df['trials1_part2.thisTrialN'].isna(),'trial'] = (list(range(1+len(df.loc[~df['trials2_part1.thisTrialN'].isna(),'trials2_part1.thisTrialN'])+len(df.loc[~df['trials2_part2.thisTrialN'].isna(),'trials2_part2.thisTrialN'])+len(df.loc[~df['trials1_part1.thisTrialN'].isna(),'trials1_part1.thisTrialN']),    1+len(df.loc[~df['trials2_part1.thisTrialN'].isna(),'trials2_part1.thisTrialN'])+len(df.loc[~df['trials2_part2.thisTrialN'].isna(),'trials2_part2.thisTrialN'])+len(df.loc[~df['trials1_part1.thisTrialN'].isna(),'trials1_part1.thisTrialN'])+len(df.loc[~df['trials1_part2.thisTrialN'].isna(),'trials1_part2.thisTrialN'])))) #renumber trials
+
         else:
             df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'] = (list(range(1,1+len(df.loc[~df['trials.thisTrialN'].isna(),'trials.thisTrialN'])))) #renumber trials     
         df_ls.append(df)
