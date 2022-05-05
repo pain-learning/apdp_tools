@@ -25,7 +25,7 @@ def softmax_perception(s_cue, Q, beta, bias):
 
     # avoidance probability
     gx = 1./(1. + np.exp(-beta*(0. - pred_V - avoid_cost - bias)))
-    return gx    
+    return gx
 
 def draw_cue(num_trial):
     """drawing cues based on given probability"""
@@ -37,7 +37,7 @@ def draw_cue(num_trial):
         trial_type.append(smp+1) # match matlab number
     return trial_type
 
-def model_generalise_gs(param_dict, subjID, num_trial=190):
+def model_generalise_gs(param_dict, subjID, group_name, num_trial=190):
     """simulate shapes, avoid actions, and shock outcomes"""
     # load predefined image sequences (38 trials x 5 blocks)
     # trial_type = np.squeeze(pd.read_csv('./probs/generalise_stim.csv').values) # 1:7
@@ -48,9 +48,10 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
     # Q = sigmoid(-0.2) * np.ones(num_state) # 7 possible cues
     Q = np.zeros(num_state) # 7 possible cues
     alpha = sigmoid(0.95) * np.ones(1) # initial learning rate
-    
+
     # initialise output
     data_out = []
+    rt = 0
 
     # simulate trials
     for t in range(num_trial):
@@ -60,7 +61,7 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
         # avoid or not
         p_avoid = softmax_perception(s_cue, Q, param_dict['beta'], param_dict['bias'])
         a = int(np.random.binomial(size=1, n=1, p=p_avoid))
-        # a = int(np.random.choice([0,1], size=1, 
+        # a = int(np.random.choice([0,1], size=1,
         #     p=[1-p_avoid, p_avoid], replace=True))
         # print(p_avoid, a)
 
@@ -105,33 +106,33 @@ def model_generalise_gs(param_dict, subjID, num_trial=190):
         alpha = param_dict['eta']*np.abs(PE) + (1-param_dict['eta'])*alpha
 
         # output
-        data_out.append([subjID, t, s_cue, a, r])
-        
+        data_out.append([subjID, group_name, t, s_cue, a, rt, r])
+
     df_out = pd.DataFrame(data_out)
-    df_out.columns = ['subjID', 'trial', 'cue', 'choice', 'outcome']
+    df_out.columns = ['subjID', 'group', 'trial', 'cue', 'choice', 'rt', 'outcome']
     # print(df_out)
     return df_out
 
 def sim_generalise_gs(param_dict, sd_dict, group_name, seed, num_sj=50, num_trial=190, model_name='generalise_gs'):
     """simulate generalise instrumental avoidance task for multiple subjects"""
     multi_subject = []
-    
+
     # generate new params
     np.random.seed(seed)
     sample_params = dict()
     for key in param_dict:
         sample_params[key] = np.random.normal(param_dict[key], sd_dict[key], size=1)[0]
-    
+
     for sj in range(num_sj):
-        df_sj = model_generalise_gs(sample_params, sj, num_trial)
+        df_sj = model_generalise_gs(sample_params, sj, group_name, num_trial)
         multi_subject.append(df_sj)
-        
+
     df_out = pd.concat(multi_subject)
     # saving output
-    output_dir = './tmp_output/generalise_sim/'
+    output_dir = './sim_output/generalise_sim_'+str(num_sj)+'/'
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
-    f_name = model_name+'_'+group_name+'_'+str(seed)
+    f_name = model_name+'_'+group_name+'_'+str(seed)+'_'+str(num_trial)+'_'+str(num_sj)
     df_out.to_csv(output_dir+f_name+'.txt', sep='\t', index=False)
     print(df_out)
 
@@ -150,14 +151,20 @@ def generalise_gs_preprocess_func(txt_path):
     cue = np.full((n_subj, t_max), 0, dtype=int)
     choice = np.full((n_subj, t_max), -1, dtype=int)
     outcome = np.full((n_subj, t_max), -1, dtype=float)
+    rt = np.full((n_subj, t_max), -1, dtype=float)
+    subjID = np.full((n_subj),0,dtype=int)
+    group_n = np.full(n_subj,'gr',dtype=object)
 
     # Write from subj_data to the data arrays
     for s in range(n_subj):
-        subj_data = subj_group[subj_group['subjID']==s]
+        subj_data = subj_group[subj_group['subjID']==subj_ls[s]]
         t = t_subjs[s]
         cue[s][:t] = subj_data['cue']
         choice[s][:t] = subj_data['choice']
         outcome[s][:t] = -1 * np.abs(subj_data['outcome'])  # Use abs
+        subjID[s] = pd.unique(subj_data['subjID'])
+        rt[s][:t] = subj_data['rt']
+        group_n[s] = pd.unique(subj_data['group'])[0]
 
     # Wrap into a dict for pystan
     data_dict = {
@@ -167,6 +174,9 @@ def generalise_gs_preprocess_func(txt_path):
         'cue': cue,
         'choice': choice,
         'outcome': outcome,
+        'rt': rt,
+        'subjID': subjID,
+        'group': group_n
     }
     # print(data_dict)
     # Returned data_dict will directly be passed to pystan
@@ -220,21 +230,23 @@ if __name__ == "__main__":
     model_name = 'generalise_gs'
     if group_name == 'hc':
         # simulate hc subjects with given params
-        sim_generalise_gs(param_dict_hc, sd_dict_hc, group_name, seed=seed_num,num_sj=subj_num, model_name=model_name)
+        sim_generalise_gs(param_dict_hc, sd_dict_hc, group_name, seed=seed_num,num_sj=subj_num, num_trial=trial_num, model_name=model_name)
     elif group_name == 'pt':
         # simulate pt subjects with given params
-        sim_generalise_gs(param_dict_pt, sd_dict_pt, group_name, seed=seed_num, num_sj=subj_num, model_name=model_name)
+        sim_generalise_gs(param_dict_pt, sd_dict_pt, group_name, seed=seed_num, num_sj=subj_num, num_trial=trial_num, model_name=model_name)
     else:
         print('check group name (hc or pt)')
 
     # parse simulated data
-    txt_path = f'./tmp_output/generalise_sim/generalise_gs_{group_name}_{seed_num}.txt'
+    txt_path = f'./sim_output/generalise_sim_{subj_num}/generalise_gs_{group_name}_{seed_num}_{trial_num}_{subj_num}.txt'
     data_dict = generalise_gs_preprocess_func(txt_path)
-
+    data_dict_gr = data_dict
+    data_dict_gr.pop('group') 
+                     
     # fit stan model
     model_code = open('./models/generalise_gs.stan', 'r').read()
-    posterior = stan.build(program_code=model_code, data=data_dict)
-    fit = posterior.sample(num_samples=2000, num_chains=4)
+    posterior = stan.build(program_code=model_code, data=data_dict_gr)
+    fit = posterior.sample(num_samples=20, num_chains=4)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_sigma_a'].agg(['mean','var']))
     print(df['mu_beta'].agg(['mean','var']))
@@ -242,10 +254,10 @@ if __name__ == "__main__":
     # saving traces
     pars = ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias']
     df_extracted = df[pars]
-    save_dir = './tmp_output/generalise_trace/'
+    save_dir = './sim_output/generalise_trace_'+str(subj_num)+'/'
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
-    sfile = save_dir + f'{group_name}_sim_{seed_num}.csv'
+    sfile = save_dir + f'{group_name}_sim_{seed_num}_{trial_num}_{subj_num}.csv'
     df_extracted.to_csv(sfile, index=None)
 
 
@@ -258,7 +270,7 @@ if __name__ == "__main__":
     # pars = ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias']
     # extracted = fit.extract(pars=pars, permuted=True)
     # # print(extracted)
-    # sfile = f'./tmp_output/generalise_sim/{group_name}_sim_{seed_num}.pkl'
+    # sfile = f'./sim_output/generalise_sim/{group_name}_sim_{seed_num}.pkl'
     # with open(sfile, 'wb') as op:
     #     tmp = { k: v for k, v in extracted.items() if k in pars } # dict comprehension
     #     pickle.dump(tmp, op)
@@ -266,13 +278,13 @@ if __name__ == "__main__":
     # hbayesdm method
     # # fit
     # # Run the model and store results in "output"
-    # output = generalise_gs('./tmp_output/generalise_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
+    # output = generalise_gs('./sim_output/generalise_sim/'+model_name+'_'+group_name+'_'+str(seed_num)+'.txt', niter=3000, nwarmup=1500, nchain=4, ncore=16)
 
     # # debug
     # print(output.fit)
 
     # # saving
-    # sfile = './tmp_output/generalise_sim/'+group_name+'_sim_'+str(seed_num)+'.pkl'
+    # sfile = './sim_output/generalise_sim/'+group_name+'_sim_'+str(seed_num)+'.pkl'
     # with open(sfile, 'wb') as op:
     #     tmp = { k: v for k, v in output.par_vals.items() if k in ['mu_sigma_a', 'mu_sigma_n', 'mu_eta', 'mu_kappa', 'mu_beta', 'mu_bias'] } # dict comprehension
     #     pickle.dump(tmp, op)

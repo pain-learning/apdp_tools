@@ -1,0 +1,3 @@
+subjID	ppt	group
+1	jo1	A
+2	ED1	B
