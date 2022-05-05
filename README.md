@@ -90,7 +90,7 @@ Currently, available task names include `generalise`, `bandit3arm`, `circlemotor
 
 * Fit your data to models using scripts in `data_fit` (importing existing functions in `Simulation` above, but modified data input path), and visualise the results following `Visualisation`
 ```eval
-python data_dit/fit_bandit3arm_combined.py A,B
+python data_fit/fit_bandit3arm_combined.py A,B
 ```
 
 the first argument e.g 'A,B' specifies the names of two groups in your dataset, you can also leave this blank and the script will ignore the groups. 
