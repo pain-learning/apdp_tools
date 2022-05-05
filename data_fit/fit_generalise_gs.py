@@ -79,7 +79,7 @@ if __name__ == "__main__":
         
         # fit stan model
         posterior = stan.build(program_code=model_code, data=data_dict_gr)
-        fit = posterior.sample(num_samples=500, num_chains=4)
+        fit = posterior.sample(num_samples=2000, num_chains=4)
         fits.append(fit)
         df = fit.to_frame()  # pandas `DataFrame, requires pandas
         data_dict_gr['group'] = group_value

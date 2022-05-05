@@ -208,7 +208,7 @@ if __name__ == "__main__":
     # fit stan model
     model_code = open('./models/bandit3arm_combLR_lapse_decay_b.stan', 'r').read()
     posterior = stan.build(program_code=model_code, data=data_dict_gr)
-    fit = posterior.sample(num_samples=20, num_chains=4)
+    fit = posterior.sample(num_samples=20, num_chains=2)
     df = fit.to_frame()  # pandas `DataFrame, requires pandas
     print(df['mu_Arew'].agg(['mean','var']))
     print(df['mu_Apun'].agg(['mean','var']))

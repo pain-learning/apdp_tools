@@ -138,11 +138,6 @@ if __name__ == "__main__":
     except IndexError:
         groups_comp = ['']
 
-    # print(groups_comp)
-    # groups_comp = 'A,B'
-    # groups_comp=groups_comp.split(",")
-    # groups_comp = ['']
-
 
     txt_path = f'./transformed_data/bandit3arm/bandit3arm_data.txt'
     data_dict = bandit_combined_preprocess_func(txt_path)#, task_params=task_params)
@@ -171,7 +166,7 @@ if __name__ == "__main__":
         data_dict_gr['N'] = data_dict_gr['rt'].shape[0]
         # fit stan model
         posterior = stan.build(program_code=model_code, data=data_dict_gr)
-        fit = posterior.sample(num_samples=10, num_chains=4)
+        fit = posterior.sample(num_samples=2000, num_chains=4)
         fits.append(fit)
         df = fit.to_frame()  # pandas `DataFrame, requires pandas
         data_dict_gr['group'] = group_value
