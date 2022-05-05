@@ -63,7 +63,7 @@ Please note Stan can take several hours to run for a large number of subjects/tr
 Once the simulations with different study design arguments are finished, you can proceed with power calculation, to evaluate effect size and fitted parameter distribution, run:
 
 ```eval
-python visualisation/hdi_compare.py 160 3 sim_bandit3arm_combined 2 50
+python visualisation/hdi_compare.py 160 3 bandit3arm_combined 2 50
 ```
 Where the first argument is the number of trials used in the simulation (160), the second argument is the number of subjects in the simulation (3), the third argument corresponds to model name (sim_bandit3arm_combined), the fourth specifies the number of simulations minus 1, and the last number of permutations.
 
@@ -90,7 +90,7 @@ Currently, available task names include `generalise`, `bandit3arm`, `circlemotor
 
 * Fit your data to models using scripts in `data_fit` (importing existing functions in `Simulation` above, but modified data input path), and visualise the results following `Visualisation`
 ```eval
-python data_dit/fit_bandit3arm_combined.py A,B
+python data_fit/fit_bandit3arm_combined.py A,B
 ```
 
 the first argument e.g 'A,B' specifies the names of two groups in your dataset, you can also leave this blank and the script will ignore the groups. 
