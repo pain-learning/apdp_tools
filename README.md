@@ -3,10 +3,10 @@
 This repository is the code used for data simulation and analysis for pain (ADPD consortium project).
 
 The code allows to analyse data for the following tasks, which you can fork as well:
-<a href='https://gitlab.pavlovia.org/jao57/balloon_task_public'>Balloon - 3 Arm Bandit</a>
-<a href='https://gitlab.pavlovia.org/jao57/rocks_task_public'>Rocks - Generalisation</a>
-<a href='https://gitlab.pavlovia.org/jao57/fish_task_public'>Fish - Go No Go</a>
-<a href='https://gitlab.pavlovia.org/jao57/circles_task_public'>Circles - Circles motor</a>
+* <a href='https://gitlab.pavlovia.org/jao57/balloon_task_public'>Balloon - 3 Arm Bandit<- /a>
+* <a href='https://gitlab.pavlovia.org/jao57/rocks_task_public'>Rocks - Generalisation</a>
+* <a href='https://gitlab.pavlovia.org/jao57/fish_task_public'>Fish - Go No Go</a>
+* <a href='https://gitlab.pavlovia.org/jao57/circles_task_public'>Circles - Circles motor</a>
 
 
 ## Requirements
