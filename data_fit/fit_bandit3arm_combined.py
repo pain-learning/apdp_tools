@@ -17,7 +17,7 @@ from visualisation.hdi_compare import hdi, hdi_diff
 
 def extract_ind_results(df,pars_ind,data_dict):
     out_col_names = []
-    out_df = np.zeros([2,len(pars_ind)*2])
+    out_df = np.zeros([data_dict['N'],len(pars_ind)*2])
     i=0
     for ind_par in pars_ind:
         pattern = r'\A'+ind_par+r'.\d+'
@@ -58,7 +58,7 @@ def plot_violin_params_mean(model_name,param_ls, groups_comp):
     df_all_new = df_all.melt(id_vars='group',var_name='parameter')
     n_param = len(param_ls)
     fig, ax = plt.subplots(1,n_param,figsize=(15,5))
-    leg_box = (-1,-0.1)    
+    leg_box = (-1,-0.1)
     pcols = ["b", ".85"];
     sns.set_theme(style="whitegrid")
     for n in range(n_param):
@@ -66,12 +66,12 @@ def plot_violin_params_mean(model_name,param_ls, groups_comp):
         sns.despine(left=True)
         g.set(ylabel=None)
         ax[n].get_legend().remove()
-        ax[n].tick_params(axis='y', labelsize=8) 
+        ax[n].tick_params(axis='y', labelsize=8)
         g.set(xlabel=None)
     if split_viol:
         plt.legend(loc='upper center', bbox_to_anchor=leg_box,
               fancybox=True, shadow=True, ncol=2)
-    
+
     save_dir = './data_output/'+model_name+'_mydata/'
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
@@ -85,11 +85,11 @@ def comp_hdi_mean_data(model_name,param_ls, groups_comp=None):
     compare hdi by drawing simulations (trace means)
     """
     output_dir = './data_output/'+model_name+'_mydata/'
-    
+
     if groups_comp != ['']:
         gr1_file = os.path.join(output_dir,'mydata_fit_group_trace'+groups_comp[0]+'.csv')
         gr2_file = os.path.join(output_dir,'mydata_fit_group_trace'+groups_comp[1]+'.csv')
-        
+
         gr1_dict = pd.read_csv(gr1_file)
         gr2_dict = pd.read_csv(gr2_file)
     else:
@@ -97,7 +97,7 @@ def comp_hdi_mean_data(model_name,param_ls, groups_comp=None):
         gr_dict = pd.read_csv(gr_file)
     df_out = []
     bounds = []
-    for key in param_ls:       
+    for key in param_ls:
         if groups_comp != ['']:
             # calculate lower bounds of simulation using difference
             hdi_bounds = hdi_diff(key, gr1_dict, gr2_dict)
@@ -114,7 +114,7 @@ def comp_hdi_mean_data(model_name,param_ls, groups_comp=None):
         else:
             hdi_bounds = hdi(gr_dict[key].values)
             bounds.append(hdi_bounds)
-            df_tmp = pd.DataFrame({ 
+            df_tmp = pd.DataFrame({
                 'param':[key],
                 'param_mean':[np.mean(gr_dict[key])],
                 'hdi_low':[min(hdi_bounds)],
@@ -124,15 +124,15 @@ def comp_hdi_mean_data(model_name,param_ls, groups_comp=None):
     df_out = pd.concat(df_out)
     df_out.to_csv(output_dir+'param_stat'+''.join(groups_comp)+'.csv',index=None)
     if groups_comp != ['']:
-        df_hdi_diff = pd.DataFrame(bounds,columns=['hdi_low','hdi_high']) 
+        df_hdi_diff = pd.DataFrame(bounds,columns=['hdi_low','hdi_high'])
         df_hdi_diff = df_hdi_diff.join(pd.DataFrame(param_ls,columns=['param']) )
         df_hdi_diff.to_csv(output_dir+'hdi_diff_stat'+''.join(groups_comp)+'.csv',index=None)
-    
+
 
 
 if __name__ == "__main__":
    # parse data
-    try:    
+    try:
         groups_comp = sys.argv[1]
         groups_comp = groups_comp.split(",")
     except IndexError:
@@ -166,7 +166,7 @@ if __name__ == "__main__":
         data_dict_gr['N'] = data_dict_gr['rt'].shape[0]
         # fit stan model
         posterior = stan.build(program_code=model_code, data=data_dict_gr)
-        fit = posterior.sample(num_samples=2000, num_chains=4)
+        fit = posterior.sample(num_samples=2000, num_chains=4, num_warmup=1000)
         fits.append(fit)
         df = fit.to_frame()  # pandas `DataFrame, requires pandas
         data_dict_gr['group'] = group_value
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         s_ind_file = save_dir + f'mydata_fit_ind_est'+g+'.csv'
         df_extracted.to_csv(sfile, index=None)
         df_ind.to_csv(s_ind_file, index=None)
-        
+
         diag_plot = az.plot_trace(fit,var_names=pars,compact=True,combined=True)
         save_dir = './data_output/bandit3arm_combined_mydata/'
         if not os.path.isdir(save_dir):
@@ -199,15 +199,13 @@ if __name__ == "__main__":
         save_name = 'diag_post_trace'+g+'.png'
         fig = diag_plot.ravel()[0].figure
         fig.savefig(save_dir+save_name,bbox_inches='tight',pad_inches=0)
-        
-    comp_hdi_mean_data('bandit3arm_combined', param_ls=pars, groups_comp=groups_comp)
-    plot_violin_params_mean('bandit3arm_combined', param_ls=pars, groups_comp=groups_comp)   
 
-       
+    comp_hdi_mean_data('bandit3arm_combined', param_ls=pars, groups_comp=groups_comp)
+    plot_violin_params_mean('bandit3arm_combined', param_ls=pars, groups_comp=groups_comp)
+
+
     hdi_plot = az.plot_forest(fits,model_names=groups_comp,var_names=pars,figsize=(7,7),combined=True)
     fig = hdi_plot.ravel()[0].figure
     save_name = 'HDI_comp'+''.join(groups_comp)+'.png'
     save_dir = './data_output/bandit3arm_combined_mydata/'
     fig.savefig(save_dir+save_name,bbox_inches='tight',pad_inches=0)
-
-    
