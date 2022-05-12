@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
    # parse data
     # txt_path = f'./transformed_data/circlemotor/circlemotor_data0.txt'
-    txt_path = f'./transformed_data/circlemotor/circlemotor_data1.txt'
+    txt_path = f'./transformed_data/circlemotor/circlemotor_data.txt'
     data_dict = motorcircle_preprocess_func(txt_path, task_params=task_params)
     # print(data_dict)
     model_code = open('./models/motorcircle_realdata.stan', 'r').read() # moved to y changes

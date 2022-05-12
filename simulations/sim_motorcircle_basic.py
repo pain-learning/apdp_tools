@@ -72,7 +72,7 @@ def motorcircle_preprocess_func(txt_path, task_params=None):
     y = np.full((n_subj, t_max), 0, dtype=float)
 
     # Write from subj_data to the data arrays
-    for s in range(n_subj):
+    for s in range(1,n_subj):
         subj_data = subj_group[subj_group['subjID']==s]
         t = t_subjs[s]
         x[s][:t] = subj_data['x']
