@@ -1,4 +1,4 @@
-# Quantitative Cognitive Tests (QCT) tools
+# Quantitative Aversive Cognitive Testing (QACT) tools
 
 This repository is the code used for data simulation and analysis for pain (ADPD consortium project).
 
